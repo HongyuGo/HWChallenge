@@ -11,7 +11,7 @@ vector<Robot*>RobotVec;
 int Money;
 
 // char map[MAPLEN][MAPLEN];
-
+int ss;
 bool MapInit() {
     char line[1024];
     int i = 0;
