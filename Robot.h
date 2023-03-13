@@ -8,6 +8,8 @@ class Robot{
         static constexpr double MaxFoward = 6.0;
         static constexpr double MinBack = -2.0;
         static constexpr double MaxRotaing = PI;
+        static constexpr double MaxTraction = 250.0;
+        static constexpr double MaxTorque = 50.0;
         int WorkBenchID = -1;
         int TypeArticleCarry = 0;
         double TimeValueCoeffcient = 0.0;
@@ -18,6 +20,11 @@ class Robot{
         double Towards = 0.0;
         vector<double> Axis{0.0, 0.0};
         double Radius = NormalRadius;
+        double Area = Radius * Radius * PI;
+        double Quality = Area * Density;
+        double Traction = 0.0;
+        double Torque = 0.0;
+        double Acceleration = 0.0;
     public:
         Robot(){}
         int& GetWorkBenchID(){return WorkBenchID;}
@@ -32,6 +39,7 @@ class Robot{
         double& GetRadius(){return Radius;}
         void SetPalstance(double _Palstance);
         void SetLinearSpeed(vector<double>& _LinearSpeed);
+        void CalculatePhysicalParams();
         void ShowRobot()const;
         ~Robot(){}
 };

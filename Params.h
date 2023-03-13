@@ -8,6 +8,6 @@
 #include <cmath>
 #include <algorithm>
 using namespace std;
-#define SHOW (1)
+#define SHOW (0)
 extern int IDCount;
 extern const int RobotNum;

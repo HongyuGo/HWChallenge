@@ -12,6 +12,11 @@ void Robot::SetLinearSpeed(vector<double>& _LinearSpeed){
     RealSpeed = _RealSpeed > MaxFoward ? MaxFoward : _RealSpeed;
     RealSpeed = _RealSpeed < MinBack ? MinBack : _RealSpeed;
 }
+void Robot::CalculatePhysicalParams(){
+    Area = Radius * Radius * PI;
+    Quality = Area * Density;
+    Acceleration = Traction / Quality;
+}
 void Robot::ShowRobot() const {
     cerr << "WorkBenchIDClose : " << WorkBenchID << " TypeArticleCarry : " << TypeArticleCarry << " TimeValueCoeffcient : " << TimeValueCoeffcient 
          << " CollisionValueCoeffcient : "  << CollisionValueCoeffcient << endl;
