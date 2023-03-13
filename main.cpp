@@ -98,27 +98,70 @@ bool ReadInfo(int _WorkBenchNum, vector<Workbench*> _WorkBenchVec, vector<Robot*
     return false;
 }
 
+double operator-(const vector<double> _left, const vector<double> _right){
+    return abs(_left[0] - _right[0]) + abs(_left[1] - _right[1]);
+}
+
+double CalculateDistance(Robot* _Robot, vector<Workbench*> _WorkBenchVec){
+    int i;
+    int MinID;
+    vector<double> _axis = _Robot->GetAxis();
+    double MinDistance = 1e10;
+    // cerr << "WorkBenchVec.size()" << _WorkBenchVec.size() << endl;
+    for(i = 0; i < _WorkBenchVec.size(); i++){
+        double DistanceTmp = _axis - _WorkBenchVec[i]->GetAxis();
+        if(DistanceTmp < MinDistance){
+            MinDistance = DistanceTmp;
+            MinID= i;
+        }
+    }
+    int flag = 0;
+    double XDistance =  _WorkBenchVec[MinID]->GetAxis()[0] - _axis[0];
+    double YDistance =  _WorkBenchVec[MinID]->GetAxis()[1] - _axis[1];
+    double Angle = atan2(YDistance, XDistance);
+    double AngleDifference = abs(Angle - _Robot->GetTowards());
+    cerr << AngleDifference << endl;
+    flag = Angle - _Robot->GetTowards() > 0.0 ? 1 : -1; // 1:ni -1 sun;
+    double RealDis =  sqrt(XDistance * XDistance + YDistance * YDistance);
+    _Robot->GetWantToCloseWBID() = _WorkBenchVec[MinID]->GetWorkBenchID();
+    _Robot->GetRobotWorkBenchDis() = RealDis;
+    _Robot->GetAngleDifference() = AngleDifference;
+    double AngleSpeed = AngleDifference > 1.5 ? 1.5 : AngleDifference;
+    return AngleSpeed * flag;
+}
+
 int main() {
+    // vector<double> ve1(2,1.0);
+    // vector<double> ve2(2,2.0);
+    // cout << ve1 - ve2 <<endl;
     MapInit();
     puts("OK");
     fflush(stdout);
     int frameID;
     int WorkBenchNum;
+    int i;
     while (scanf("%d", &frameID) != EOF) {
         cin >> Money;
         cin >> WorkBenchNum;
-        cerr << "frameID " << frameID << " Money " << Money <<" WorkBenchNum " << WorkBenchNum << endl;
+        // cerr << "frameID " << frameID << " Money " << Money <<" WorkBenchNum " << WorkBenchNum << endl;
         ReadInfo(WorkBenchNum, WorkBenchVec, RobotVec);
 
-
-
-        
+        double MaxDistance = 0;
+        for(i = 0; i < WorkBenchSelf[1].size(); i++){
+           WorkBenchSelf[1][i]->GetAxis(); 
+        }
+        double angleSpeed =  CalculateDistance(RobotVec[0], WorkBenchSelf[1]);
         printf("%d\n", frameID);
-        int lineSpeed = 3;
-        double angleSpeed = 1.5;
+        int lineSpeed = 1;
         for(int robotId = 0; robotId <1; robotId++){
             printf("forward %d %d\n", robotId, lineSpeed);
             printf("rotate %d %f\n", robotId, angleSpeed);
+            if(RobotVec[0]->GetWorkBenchID() == RobotVec[0]->GetWantToCloseWBID()){
+                cout << "buy " << 0 << endl;
+                fflush(stdout);
+                // printf("buy %d\n", 1);
+                // exit(1);
+            }
         }
         printf("OK\n", frameID);
         fflush(stdout);

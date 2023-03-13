@@ -25,6 +25,9 @@ class Robot{
         double Traction = 0.0;
         double Torque = 0.0;
         double Acceleration = 0.0;
+        int WantToCloseWBID = 0;
+        double RobotWorkBenchDis = 0.0;
+        double AngleDifference = 0.0;
     public:
         Robot(){}
         int& GetWorkBenchID(){return WorkBenchID;}
@@ -39,6 +42,9 @@ class Robot{
         double& GetRadius(){return Radius;}
         void SetPalstance(double _Palstance);
         void SetLinearSpeed(vector<double>& _LinearSpeed);
+        int& GetWantToCloseWBID(){return WantToCloseWBID;}
+        double& GetRobotWorkBenchDis(){return RobotWorkBenchDis;}
+        double& GetAngleDifference(){return AngleDifference;}
         void CalculatePhysicalParams();
         void ShowRobot()const;
         ~Robot(){}
