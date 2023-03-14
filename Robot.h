@@ -1,5 +1,6 @@
 #pragma once
 #include "Params.h"
+
 class Robot{
     public:
         static constexpr double NormalRadius = 0.45;
@@ -11,7 +12,7 @@ class Robot{
         static constexpr double MaxTraction = 250.0;
         static constexpr double MaxTorque = 50.0;
         int WorkBenchID = -1;
-        int TypeArticleCarry = 0;
+        int TypeArticleCarry = 0;//0 : no product, [1~7] : product id
         double TimeValueCoeffcient = 0.0;
         double CollisionValueCoeffcient = 0.0;
         double Palstance = 0.0;
@@ -29,8 +30,10 @@ class Robot{
         double RobotWorkBenchDis = 0.0;
         double AngleDifference = 0.0;
         int WantTOCloseWBKind = 0;
-        int MoveFlag = 0; //0 : Stop, 1 : Move
-        int HaveTarget = -1;
+        int ProductFlag = 0; //0 : no product, [1~7] : product id
+        int HaveTarget = -1; //没有要去的工作台，0~k是要去的工作台ID
+        int UrgentWork = -1; //-1 : no urgent work, [0~K] : urgent workbench id
+        int BuySellState = 0; //0：buy, 1:sell
     public:
         Robot(){}
         int& GetWorkBenchID(){return WorkBenchID;}
