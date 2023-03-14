@@ -108,17 +108,23 @@ ostream& operator<<(ostream& os, const vector<double> _axis){
 
 int FindMinDistanceTargetWB(Robot* _Robot, vector<Workbench*> _WorkBenchVec){
     int i;
-    int MinID;
+    int MinID = _WorkBenchVec.size() - 1;
     vector<double> _axis = _Robot->GetAxis();
     double MinDistance = 1e10;
     for(i = 0; i < _WorkBenchVec.size(); i++){
         double DistanceTmp = _axis - _WorkBenchVec[i]->GetAxis();
-        if(DistanceTmp < MinDistance){
+        // cerr << _WorkBenchVec[i] -> RobotScheduled << endl;
+        // exit(1);
+        if(DistanceTmp < MinDistance && _WorkBenchVec[i] -> RobotScheduled == 0){
+            // cerr << "Min test" << endl;
             MinDistance = DistanceTmp;
             MinID= i;
         }
     }
-    // _WorkBenchVec[MinID] -> 
+    // cerr << "MinID" << MinID << endl;
+    // exit(1);
+    if(_WorkBenchVec[MinID] -> RobotScheduled == 0)
+        _WorkBenchVec[MinID] -> RobotScheduled = 1;
     // cerr << "MinID " << MinID << endl;
     // cerr << "TargetWB " << _WorkBenchVec[MinID]->WorkBenchID << endl;
     return MinID;
@@ -138,7 +144,12 @@ double CalculateDistance(Robot* _Robot, vector<Workbench*> _WorkBenchVec){
     //     }
     // }
     // if(_Robot->HaveTargetWBFlag == 0){
-    MinID = FindMinDistanceTargetWB(_Robot, _WorkBenchVec);
+    if(_Robot->HaveTarget == -1){
+        MinID = FindMinDistanceTargetWB(_Robot, _WorkBenchVec);
+        _Robot->HaveTarget = MinID;
+    }
+    else    
+        MinID = _Robot->HaveTarget;
     // cerr << "MinID" << MinID << endl;
     // cerr << "teststetstes" << endl;
         // _Robot->HaveTargetWBFlag = 1;
@@ -244,7 +255,7 @@ int main() {
                 LineSpeed[i] = 0.5;
         }
         cerr << "Speed" <<LineSpeed[0]<< endl;
-        for(int robotId = 0; robotId <4; robotId++){
+        for(int robotId = 0; robotId < 4; robotId++){
             printf("forward %d %lf\n", robotId, LineSpeed[robotId]);
             // cerr << "robotId " << robotId << " Linespeed : " <<   LineSpeed[robotId] << endl;
             printf("rotate %d %f\n", robotId, AngleSpeed[robotId]);
@@ -254,7 +265,9 @@ int main() {
                 fflush(stdout);
                 // cur0++;
                 Cur[robotId] = (++Cur[robotId] % 4);
-                RobotVec[0]->WantTOCloseWBKind = Order[robotId][Cur[robotId]];
+                RobotVec[robotId]->WantTOCloseWBKind = Order[robotId][Cur[robotId]];
+                WorkBenchVec[RobotVec[robotId]->WorkBenchID] -> RobotScheduled = 0;
+                RobotVec[robotId] -> HaveTarget = -1;
                 // printf("buy %d\n", 1);
                 // exit(1);
             }
@@ -263,6 +276,8 @@ int main() {
                 fflush(stdout);
                 Cur[robotId] = (++Cur[robotId] % 4);
                 RobotVec[robotId]->WantTOCloseWBKind = Order[robotId][Cur[robotId]];
+                WorkBenchVec[RobotVec[robotId]->WorkBenchID] -> RobotScheduled = 0;
+                RobotVec[robotId] -> HaveTarget = -1;
             }
             
         }
