@@ -28,7 +28,8 @@ class Robot{
         int WantToCloseWBID = 0;
         double RobotWorkBenchDis = 0.0;
         double AngleDifference = 0.0;
-        int HaveTargetWBFlag = 0;//0 : not have , 1 : have
+        int WantTOCloseWBKind = 0;
+        int MoveFlag = 0; //0 : Stop, 1 : Move
     public:
         Robot(){}
         int& GetWorkBenchID(){return WorkBenchID;}
