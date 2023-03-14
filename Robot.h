@@ -1,7 +1,7 @@
 #pragma once
 #include "Params.h"
 class Robot{
-    private:
+    public:
         static constexpr double NormalRadius = 0.45;
         static constexpr double HoldingRadius = 0.53;
         static constexpr double Density = 20.0;
@@ -28,6 +28,7 @@ class Robot{
         int WantToCloseWBID = 0;
         double RobotWorkBenchDis = 0.0;
         double AngleDifference = 0.0;
+        int HaveTargetWBFlag = 0;//0 : not have , 1 : have
     public:
         Robot(){}
         int& GetWorkBenchID(){return WorkBenchID;}

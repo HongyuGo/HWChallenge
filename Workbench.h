@@ -2,7 +2,7 @@
 #include "Params.h"
 #include "Robot.h"
 class Workbench{
-    private:
+    public:
         enum{WORKTIME1 = 50, WORKTIME2 = 50, WORKTIME3 = 50, 
              WORKTIME4 = 500, WORKTIME5 = 500, WORKTIME6 = 500,
              WORKTIME7 = 1000, WORKTIME8 = 1, WORKTIME9 = 1};

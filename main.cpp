@@ -102,12 +102,11 @@ double operator-(const vector<double> _left, const vector<double> _right){
     return abs(_left[0] - _right[0]) + abs(_left[1] - _right[1]);
 }
 
-double CalculateDistance(Robot* _Robot, vector<Workbench*> _WorkBenchVec){
+int FindMinDistanceTargetWB(Robot* _Robot, vector<Workbench*> _WorkBenchVec){
     int i;
     int MinID;
     vector<double> _axis = _Robot->GetAxis();
     double MinDistance = 1e10;
-    // cerr << "WorkBenchVec.size()" << _WorkBenchVec.size() << endl;
     for(i = 0; i < _WorkBenchVec.size(); i++){
         double DistanceTmp = _axis - _WorkBenchVec[i]->GetAxis();
         if(DistanceTmp < MinDistance){
@@ -115,12 +114,32 @@ double CalculateDistance(Robot* _Robot, vector<Workbench*> _WorkBenchVec){
             MinID= i;
         }
     }
+    return MinID;
+}
+
+double CalculateDistance(Robot* _Robot, vector<Workbench*> _WorkBenchVec){
+    int i;
+    int MinID;
+    vector<double> _axis = _Robot->GetAxis();
+    // double MinDistance = 1e10;
+    // // cerr << "WorkBenchVec.size()" << _WorkBenchVec.size() << endl;
+    // for(i = 0; i < _WorkBenchVec.size(); i++){
+    //     double DistanceTmp = _axis - _WorkBenchVec[i]->GetAxis();
+    //     if(DistanceTmp < MinDistance){
+    //         MinDistance = DistanceTmp;
+    //         MinID= i;
+    //     }
+    // }
+    // if(_Robot->HaveTargetWBFlag == 0){
+    MinID = FindMinDistanceTargetWB(_Robot, _WorkBenchVec);
+        // _Robot->HaveTargetWBFlag = 1;
+    // }
     int flag = 0;
     double XDistance =  _WorkBenchVec[MinID]->GetAxis()[0] - _axis[0];
     double YDistance =  _WorkBenchVec[MinID]->GetAxis()[1] - _axis[1];
     double Angle = atan2(YDistance, XDistance);
     double AngleDifference = abs(Angle - _Robot->GetTowards());
-    cerr << AngleDifference << endl;
+    // cerr << AngleDifference << endl;
     flag = Angle - _Robot->GetTowards() > 0.0 ? 1 : -1; // 1:ni -1 sun;
     double RealDis =  sqrt(XDistance * XDistance + YDistance * YDistance);
     _Robot->GetWantToCloseWBID() = _WorkBenchVec[MinID]->GetWorkBenchID();
