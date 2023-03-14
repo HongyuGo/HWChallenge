@@ -4,10 +4,10 @@ void WorkBenchAndRobotRead(const string& _InitString, vector<Workbench*>& _WorkB
     Workbench* WorkBenchPtr = nullptr;
     Robot* RobotPtr = nullptr;
     for(i = 0; i < _InitString.size() - 1; i++){
-        char get = _InitString[i];
+        char get = _InitString[i];//get = map[yaxis][i]
         vector<double> axis;
-        axis.push_back(0.25 + 0.5 * i);
-        axis.push_back(49.75 - 0.5 * yaxis);
+        axis.push_back(0.25 + 0.5 * i);//x
+        axis.push_back(49.75 - 0.5 * yaxis);//y
         // cerr << get << endl;
         if(get != '.' && get != 'A'){
             WorkBenchPtr = new Workbench(get, axis, IDCount++);

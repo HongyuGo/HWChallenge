@@ -134,16 +134,6 @@ double CalculateDistance(Robot* _Robot, vector<Workbench*> _WorkBenchVec){
     int i;
     int MinID;
     vector<double> _axis = _Robot->GetAxis();
-    // double MinDistance = 1e10;
-    // // cerr << "WorkBenchVec.size()" << _WorkBenchVec.size() << endl;
-    // for(i = 0; i < _WorkBenchVec.size(); i++){
-    //     double DistanceTmp = _axis - _WorkBenchVec[i]->GetAxis();
-    //     if(DistanceTmp < MinDistance){
-    //         MinDistance = DistanceTmp;
-    //         MinID= i;
-    //     }
-    // }
-    // if(_Robot->HaveTargetWBFlag == 0){
     if(_Robot->HaveTarget == -1){
         MinID = FindMinDistanceTargetWB(_Robot, _WorkBenchVec);
         _Robot->HaveTarget = MinID;
@@ -167,13 +157,6 @@ double CalculateDistance(Robot* _Robot, vector<Workbench*> _WorkBenchVec){
     else
         quadrant = 3;
 
-    // cerr << _WorkBenchVec[MinID]->GetAxis() << endl;
-    // cerr << _axis << endl;
-    // if(YDistance < 0.5 && YDistance >= 0)
-    //     YDistance = 0.5;
-    // if(YDistance > -0.5 && YDistance <= 0)
-    //     YDistance = -0.5;
-    // cerr  << "YDistance " << YDistance << endl;
     double Angle = atan2(YDistance, XDistance);
     // cerr << "Angle" << Angle << endl;
     double AngleDifference = abs(Angle - _Robot->GetTowards());
@@ -181,25 +164,6 @@ double CalculateDistance(Robot* _Robot, vector<Workbench*> _WorkBenchVec){
         flag = Angle - _Robot->GetTowards() > 0.0 ? 1 : -1; // 1:ni -1 sun;
     else    
         flag = 1;
-
-    // if(_Robot->Towards > -PI/2 && _Robot->Towards < PI/2 && (quadrant == 1 || quadrant == 4))
-    //     flag = Angle - _Robot->GetTowards() > 0.0 ? 1 : -1; // 1:ni -1 sun;
-    // else 
-    //     flag = Angle - _Robot->GetTowards() < 0.0 ? 1 : -1; // 1:ni -1 sun;
-
-    // if(AngleDifference  > 0.1)
-    //     flag = 1;
-    // else if(AngleDifference < -0.1)
-    //     flag = -1;
-    // else    
-    //     flag = 0;
-    // if(abs(YDistance) < 0.5){
-    //     AngleDifference = 0.0;
-    //     flag = 1;
-    // }
-    // cerr << "miememememem " << endl;
-    // cerr << AngleDifference << endl;
-    // flag = Angle - _Robot->GetTowards() > 0.0 ? 1 : -1; // 1:ni -1 sun;
     double RealDis =  sqrt(XDistance * XDistance + YDistance * YDistance);
     _Robot->GetWantToCloseWBID() = _WorkBenchVec[MinID]->GetWorkBenchID();
     _Robot->GetRobotWorkBenchDis() = RealDis;
