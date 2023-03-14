@@ -24,6 +24,7 @@ class Workbench{
         int BuyingPrice;
         int SellingPrice;
         int ProductStatus= 0;//1:have, 0:not have
+        // int Robot
     public:
         Workbench(char _WorkBenchKind, const vector<double>& _axis, int _WorkBenchID);
         int& GetWorkBenchKind(){return WorkBenchKind;}

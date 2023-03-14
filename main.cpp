@@ -118,8 +118,9 @@ int FindMinDistanceTargetWB(Robot* _Robot, vector<Workbench*> _WorkBenchVec){
             MinID= i;
         }
     }
+    // _WorkBenchVec[MinID] -> 
     // cerr << "MinID " << MinID << endl;
-    cerr << "TargetWB " << _WorkBenchVec[MinID]->WorkBenchID << endl;
+    // cerr << "TargetWB " << _WorkBenchVec[MinID]->WorkBenchID << endl;
     return MinID;
 }
 
@@ -155,15 +156,15 @@ double CalculateDistance(Robot* _Robot, vector<Workbench*> _WorkBenchVec){
     else
         quadrant = 3;
 
-    cerr << _WorkBenchVec[MinID]->GetAxis() << endl;
-    cerr << _axis << endl;
+    // cerr << _WorkBenchVec[MinID]->GetAxis() << endl;
+    // cerr << _axis << endl;
     // if(YDistance < 0.5 && YDistance >= 0)
     //     YDistance = 0.5;
     // if(YDistance > -0.5 && YDistance <= 0)
     //     YDistance = -0.5;
-    cerr  << "YDistance " << YDistance << endl;
+    // cerr  << "YDistance " << YDistance << endl;
     double Angle = atan2(YDistance, XDistance);
-    cerr << "Angle" << Angle << endl;
+    // cerr << "Angle" << Angle << endl;
     double AngleDifference = abs(Angle - _Robot->GetTowards());
     if(abs(AngleDifference) < 0.5)
         flag = Angle - _Robot->GetTowards() > 0.0 ? 1 : -1; // 1:ni -1 sun;
@@ -193,7 +194,7 @@ double CalculateDistance(Robot* _Robot, vector<Workbench*> _WorkBenchVec){
     _Robot->GetRobotWorkBenchDis() = RealDis;
     _Robot->GetAngleDifference() = AngleDifference;
     double AngleSpeed = AngleDifference > 1.5 ? 1.5 : AngleDifference;
-    cerr << "AngleSpeed" << AngleSpeed << endl;
+    // cerr << "AngleSpeed" << AngleSpeed << endl;
     // cerr << "enenene " << endl;
     return AngleSpeed * flag;
 }
@@ -208,8 +209,19 @@ int main() {
     int frameID;
     int WorkBenchNum;
     int i;
-    int Order[4] = {1, 4, 2, 4};
-    int cur0 = 0;
+    const int Ordernum = 4;
+    vector<int> Order0 = {1, 4, 2, 4};
+    vector<int> Order1 = {1, 5, 3, 5};
+    vector<int> Order2 = {2, 6, 3, 6};
+    vector<int> Order3 = {2, 6, 3, 6};
+    vector<int> Cur(4,0);
+    vector<double> AngleSpeed(4, 0.0);
+    vector<vector<int>>Order;
+    Order.push_back(Order0);
+    Order.push_back(Order1);
+    Order.push_back(Order2);
+    Order.push_back(Order3);
+    vector<double> LineSpeed(4,0.0);
     while (scanf("%d", &frameID) != EOF) {
         cin >> Money;
         cin >> WorkBenchNum;
@@ -219,34 +231,38 @@ int main() {
         for(i = 0; i < WorkBenchSelf[1].size(); i++){
            WorkBenchSelf[1][i]->GetAxis(); 
         }
-        RobotVec[0]->WantTOCloseWBKind = Order[cur0];
-        double angleSpeed =  CalculateDistance(RobotVec[0], WorkBenchSelf[RobotVec[0]->WantTOCloseWBKind]);
-        
+        for(i = 0; i < 4; i++){
+            RobotVec[i]->WantTOCloseWBKind = Order[i][Cur[i]];
+            AngleSpeed[i] =  CalculateDistance(RobotVec[i], WorkBenchSelf[RobotVec[i]->WantTOCloseWBKind]);
+        }
         // cerr << "teststetstes" << endl;
-        double lineSpeed;
         printf("%d\n", frameID);
-        if(abs(angleSpeed) < 0.2)
-            lineSpeed = 3;
-        else
-            lineSpeed = 0.5;
-        cerr << "LineSpeed " << lineSpeed << endl;
-        for(int robotId = 0; robotId <1; robotId++){
-            printf("forward %d %lf\n", robotId, lineSpeed);
-            printf("rotate %d %f\n", robotId, angleSpeed);
-            if(RobotVec[0]->GetWorkBenchID() == RobotVec[0]->GetWantToCloseWBID() && WorkBenchVec[RobotVec[0]->WorkBenchID]->Role == 0){
-                cout << "buy " << 0 << endl;
+        for(i = 0; i < 4; i++){
+            if(abs(AngleSpeed[i]) < 0.2)
+                LineSpeed[i] = 3;
+            else
+                LineSpeed[i] = 0.5;
+        }
+        cerr << "Speed" <<LineSpeed[0]<< endl;
+        for(int robotId = 0; robotId <4; robotId++){
+            printf("forward %d %lf\n", robotId, LineSpeed[robotId]);
+            // cerr << "robotId " << robotId << " Linespeed : " <<   LineSpeed[robotId] << endl;
+            printf("rotate %d %f\n", robotId, AngleSpeed[robotId]);
+            // cerr << "robotId " << robotId << " AngleSpeed : " <<  AngleSpeed[robotId] << endl;
+            if(RobotVec[robotId]->GetWorkBenchID() == RobotVec[robotId]->GetWantToCloseWBID() && WorkBenchVec[RobotVec[robotId]->WorkBenchID]->Role == 0){
+                cout << "buy " << robotId << endl;
                 fflush(stdout);
                 // cur0++;
-                cur0 = (++cur0 % 4);
-                RobotVec[0]->WantTOCloseWBKind = Order[cur0];
+                Cur[robotId] = (++Cur[robotId] % 4);
+                RobotVec[0]->WantTOCloseWBKind = Order[robotId][Cur[robotId]];
                 // printf("buy %d\n", 1);
                 // exit(1);
             }
-            if(RobotVec[0]->GetWorkBenchID() == RobotVec[0]->GetWantToCloseWBID() && WorkBenchVec[RobotVec[0]->WorkBenchID]->Role == 1){
-                cout << "sell " << 0 << endl;
+            if(RobotVec[robotId]->GetWorkBenchID() == RobotVec[robotId]->GetWantToCloseWBID() && WorkBenchVec[RobotVec[robotId]->WorkBenchID]->Role == 1){
+                cout << "sell " << robotId << endl;
                 fflush(stdout);
-                cur0 = (++cur0 % 4);
-                RobotVec[0]->WantTOCloseWBKind = Order[cur0];
+                Cur[robotId] = (++Cur[robotId] % 4);
+                RobotVec[robotId]->WantTOCloseWBKind = Order[robotId][Cur[robotId]];
             }
             
         }
