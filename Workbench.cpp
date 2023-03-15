@@ -26,7 +26,7 @@ void WorkBenchAndRobotRead(const string& _InitString, vector<Workbench*>& _WorkB
     }
 }
 
-void WorkBenchAllocate(const vector<Workbench*> _WorkBenchVec, vector<vector<Workbench*>> &_WorkBenchSelf){
+void WorkBenchAllocate(const vector<Workbench*>& _WorkBenchVec, vector<vector<Workbench*>> &_WorkBenchSelf){
     int i;
     for(i = 0; i < _WorkBenchVec.size(); i++){
         int id = _WorkBenchVec[i]->GetWorkBenchKind();
@@ -34,7 +34,7 @@ void WorkBenchAllocate(const vector<Workbench*> _WorkBenchVec, vector<vector<Wor
     }
 }
 
-void WorkBenchMemRelease(const vector<Workbench*> _WorkBenchVec){
+void WorkBenchMemRelease(const vector<Workbench*>& _WorkBenchVec){
     int i;
     for(i = 0; i < _WorkBenchVec.size(); i++){
         delete _WorkBenchVec[i];
@@ -64,12 +64,15 @@ void Workbench::ShowWorkBench()const{
 }
 
 bool Workbench::HaveLock(int CarryType, vector<Robot*>& _Robot){
+    // cerr << "RobotScheduled : " << RobotScheduled << endl;
     if(CarryType == 0){
         if(RobotScheduled == -1)
             return false;
         else   
             return true;
     }else{
+        // cerr << "WorBenchID" << WorkBenchID << endl;
+        // exit(1);
         if(MaterialStatus & (1 << CarryType)){//如果工作台有了对应材料，锁了
             return true;
         }else if(RobotScheduled != -1 && _Robot[RobotScheduled]->TypeArticleCarry == CarryType){//预约工作台的机器人带的材料和输入的材料一致， 锁了

@@ -43,5 +43,5 @@ class Workbench{
 };
 
 void WorkBenchAndRobotRead(const string& _InitString, vector<Workbench*>& _WorkBenchVec, vector<Robot*>& _RobotVec, int yaxis);
-void WorkBenchAllocate(const vector<Workbench*> _WorkBenchVec, vector<vector<Workbench*>> &_WorkBenchSelf);
-void WorkBenchMemRelease(const vector<Workbench*> _WorkBenchVec);
+void WorkBenchAllocate(const vector<Workbench*>& _WorkBenchVec, vector<vector<Workbench*>> &_WorkBenchSelf);
+void WorkBenchMemRelease(const vector<Workbench*>& _WorkBenchVec);

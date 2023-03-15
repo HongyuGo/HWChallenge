@@ -1,5 +1,6 @@
 #pragma once
 #include "Params.h"
+// #include "Workbench.h"
 class Robot{
     public:
         static constexpr double NormalRadius = 0.45;
@@ -32,6 +33,7 @@ class Robot{
         int MoveFlag = 0; //0 : Stop, 1 : Move
         int HaveTarget = -1;
         int RobotID = -1;
+        int RobotMode = 0;
     public:
         Robot(){}
         int& GetWorkBenchID(){return WorkBenchID;}
