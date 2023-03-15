@@ -20,6 +20,7 @@ void WorkBenchAndRobotRead(const string& _InitString, vector<Workbench*>& _WorkB
             // axis[0] = 0.0;
             // axis[1] = 0.0;
             RobotPtr->GetAxis() = axis;
+            RobotPtr->RobotID = RobotIDCount++;
             _RobotVec.push_back(RobotPtr);
         }
     }
@@ -60,6 +61,24 @@ void Workbench::ShowWorkBench()const{
     else
         for_each(ShowBinary.begin(), ShowBinary.end(),[](int x){cerr << x;}); 
     cerr << endl;
+}
+
+bool Workbench::HaveLock(int CarryType, vector<Robot*>& _Robot){
+    if(CarryType == 0){
+        if(RobotScheduled == -1)
+            return false;
+        else   
+            return true;
+    }else{
+        if(MaterialStatus & (1 << CarryType)){//如果工作台有了对应材料，锁了
+            return true;
+        }else if(RobotScheduled != -1 && _Robot[RobotScheduled]->TypeArticleCarry == CarryType){//预约工作台的机器人带的材料和输入的材料一致， 锁了
+            // exit(1);
+            return true;
+        }else{
+            return false;
+        }
+    }
 }
 
 Workbench::Workbench(char _WorkBenchKind, const vector<double>& _axis, int _WorkBenchID){

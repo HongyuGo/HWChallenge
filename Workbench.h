@@ -24,7 +24,7 @@ class Workbench{
         int BuyingPrice;
         int SellingPrice;
         int ProductStatus= 0;//1:have, 0:not have
-        int RobotScheduled = 0;
+        int RobotScheduled = -1;
     public:
         Workbench(char _WorkBenchKind, const vector<double>& _axis, int _WorkBenchID);
         int& GetWorkBenchKind(){return WorkBenchKind;}
@@ -36,6 +36,7 @@ class Workbench{
         int& GetProductKind(){return ProductKind;}
         vector<double>& GetAxis(){return Axis;}
         int& GetProductStatus(){return ProductStatus;}
+        bool HaveLock(int CarryType, vector<Robot*>& _Robot);
         void ShowWorkBench()const;
         ~Workbench(){};
 

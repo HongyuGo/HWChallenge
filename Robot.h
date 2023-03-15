@@ -31,6 +31,7 @@ class Robot{
         int WantTOCloseWBKind = 0;
         int MoveFlag = 0; //0 : Stop, 1 : Move
         int HaveTarget = -1;
+        int RobotID = -1;
     public:
         Robot(){}
         int& GetWorkBenchID(){return WorkBenchID;}

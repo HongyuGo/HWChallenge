@@ -115,7 +115,8 @@ int FindMinDistanceTargetWB(Robot* _Robot, vector<Workbench*> _WorkBenchVec){
         double DistanceTmp = _axis - _WorkBenchVec[i]->GetAxis();
         // cerr << _WorkBenchVec[i] -> RobotScheduled << endl;
         // exit(1);
-        if(DistanceTmp < MinDistance && _WorkBenchVec[i] -> RobotScheduled == 0){
+        if(DistanceTmp < MinDistance && !(_WorkBenchVec[i]->HaveLock(_Robot->TypeArticleCarry, RobotVec))){
+        // if(DistanceTmp < MinDistance && _WorkBenchVec[i] -> RobotScheduled == 0){
             // cerr << "Min test" << endl;
             MinDistance = DistanceTmp;
             MinID= i;
@@ -123,8 +124,8 @@ int FindMinDistanceTargetWB(Robot* _Robot, vector<Workbench*> _WorkBenchVec){
     }
     // cerr << "MinID" << MinID << endl;
     // exit(1);
-    if(_WorkBenchVec[MinID] -> RobotScheduled == 0)
-        _WorkBenchVec[MinID] -> RobotScheduled = 1;
+    if(_WorkBenchVec[MinID] -> RobotScheduled == -1)
+        _WorkBenchVec[MinID] -> RobotScheduled = _Robot->RobotID;
     // cerr << "MinID " << MinID << endl;
     // cerr << "TargetWB " << _WorkBenchVec[MinID]->WorkBenchID << endl;
     return MinID;
@@ -144,6 +145,7 @@ double CalculateDistance(Robot* _Robot, vector<Workbench*> _WorkBenchVec){
     // cerr << "teststetstes" << endl;
         // _Robot->HaveTargetWBFlag = 1;
     // }
+    cerr << "MInID : " << MinID << endl;
     int flag = 0;
     double XDistance =  _WorkBenchVec[MinID]->GetAxis()[0] - _axis[0];
     double YDistance =  _WorkBenchVec[MinID]->GetAxis()[1] - _axis[1];
@@ -166,6 +168,38 @@ double CalculateDistance(Robot* _Robot, vector<Workbench*> _WorkBenchVec){
         flag = 1;
     double RealDis =  sqrt(XDistance * XDistance + YDistance * YDistance);
     _Robot->GetWantToCloseWBID() = _WorkBenchVec[MinID]->GetWorkBenchID();
+    _Robot->GetRobotWorkBenchDis() = RealDis;
+    _Robot->GetAngleDifference() = AngleDifference;
+    double AngleSpeed = AngleDifference > 1.5 ? 1.5 : AngleDifference;
+    // cerr << "AngleSpeed" << AngleSpeed << endl;
+    // cerr << "enenene " << endl;
+    return AngleSpeed * flag;
+}
+
+double Move(Robot* _Robot, int _WorkBenchID, vector<Workbench*> _WorkBenchVec){
+    vector<double> _axis = _Robot->GetAxis();
+    int flag = 0;
+    double XDistance =  _WorkBenchVec[_WorkBenchID]->GetAxis()[0] - _axis[0];
+    double YDistance =  _WorkBenchVec[_WorkBenchID]->GetAxis()[1] - _axis[1];
+    int quadrant = 0;
+    if(YDistance > 0.0 && XDistance > 0.0)
+        quadrant = 1;
+    else if(YDistance < 0.0 && XDistance > 0.0)
+        quadrant = 4;
+    else if(YDistance > 0.0 && XDistance < 0.0)
+        quadrant = 2;
+    else
+        quadrant = 3;
+
+    double Angle = atan2(YDistance, XDistance);
+    // cerr << "Angle" << Angle << endl;
+    double AngleDifference = abs(Angle - _Robot->GetTowards());
+    if(abs(AngleDifference) < 0.5)
+        flag = Angle - _Robot->GetTowards() > 0.0 ? 1 : -1; // 1:ni -1 sun;
+    else    
+        flag = 1;
+    double RealDis =  sqrt(XDistance * XDistance + YDistance * YDistance);
+    _Robot->GetWantToCloseWBID() = _WorkBenchVec[_WorkBenchID]->GetWorkBenchID();
     _Robot->GetRobotWorkBenchDis() = RealDis;
     _Robot->GetAngleDifference() = AngleDifference;
     double AngleSpeed = AngleDifference > 1.5 ? 1.5 : AngleDifference;
@@ -230,7 +264,7 @@ int main() {
                 // cur0++;
                 Cur[robotId] = (++Cur[robotId] % 4);
                 RobotVec[robotId]->WantTOCloseWBKind = Order[robotId][Cur[robotId]];
-                WorkBenchVec[RobotVec[robotId]->WorkBenchID] -> RobotScheduled = 0;
+                WorkBenchVec[RobotVec[robotId]->WorkBenchID] -> RobotScheduled = -1;
                 RobotVec[robotId] -> HaveTarget = -1;
                 // printf("buy %d\n", 1);
                 // exit(1);
@@ -240,7 +274,7 @@ int main() {
                 fflush(stdout);
                 Cur[robotId] = (++Cur[robotId] % 4);
                 RobotVec[robotId]->WantTOCloseWBKind = Order[robotId][Cur[robotId]];
-                WorkBenchVec[RobotVec[robotId]->WorkBenchID] -> RobotScheduled = 0;
+                WorkBenchVec[RobotVec[robotId]->WorkBenchID] -> RobotScheduled = -1;
                 RobotVec[robotId] -> HaveTarget = -1;
             }
             

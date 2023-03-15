@@ -11,3 +11,4 @@ using namespace std;
 #define SHOW (0)
 extern int IDCount;
 extern const int RobotNum;
+extern int RobotIDCount;
