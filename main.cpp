@@ -99,7 +99,7 @@ bool ReadInfo(int _WorkBenchNum, vector<Workbench*> _WorkBenchVec, vector<Robot*
 }
 
 double operator-(const vector<double> _left, const vector<double> _right){
-    return abs(_left[0] - _right[0]) + abs(_left[1] - _right[1]);
+    return sqrt((_left[0] - _right[0]) * (_left[0] - _right[0]) + (_left[1] - _right[1]) * (_left[1] - _right[1]));
 }
 ostream& operator<<(ostream& os, const vector<double> _axis){
     os << "_axisX : " << _axis[0] << "_axisY : " << _axis[1];
@@ -258,26 +258,34 @@ int main() {
             // cerr << "robotId " << robotId << " Linespeed : " <<   LineSpeed[robotId] << endl;
             printf("rotate %d %f\n", robotId, AngleSpeed[robotId]);
             // cerr << "robotId " << robotId << " AngleSpeed : " <<  AngleSpeed[robotId] << endl;
-            if(RobotVec[robotId]->GetWorkBenchID() == RobotVec[robotId]->GetWantToCloseWBID() && WorkBenchVec[RobotVec[robotId]->WorkBenchID]->Role == 0){
-                cout << "buy " << robotId << endl;
-                fflush(stdout);
-                // cur0++;
-                Cur[robotId] = (++Cur[robotId] % 4);
-                RobotVec[robotId]->WantTOCloseWBKind = Order[robotId][Cur[robotId]];
-                WorkBenchVec[RobotVec[robotId]->WorkBenchID] -> RobotScheduled = -1;
-                RobotVec[robotId] -> HaveTarget = -1;
-                // printf("buy %d\n", 1);
-                // exit(1);
-            }
-            if(RobotVec[robotId]->GetWorkBenchID() == RobotVec[robotId]->GetWantToCloseWBID() && WorkBenchVec[RobotVec[robotId]->WorkBenchID]->Role == 1){
+            int BuySellFlag = 0;
+            if(RobotVec[robotId]->GetWorkBenchID() == RobotVec[robotId]->GetWantToCloseWBID() && RobotVec[robotId]->TypeArticleCarry != 0){
                 cout << "sell " << robotId << endl;
                 fflush(stdout);
+                RobotVec[robotId] -> TypeArticleCarry = 0;
+                // Cur[robotId] = (++Cur[robotId] % 4);
+                // RobotVec[robotId]->WantTOCloseWBKind = Order[robotId][Cur[robotId]];
+                // WorkBenchVec[RobotVec[robotId]->WorkBenchID] -> RobotScheduled = -1;
+                // RobotVec[robotId] -> HaveTarget = -1;
+                BuySellFlag = 1;
+            }
+            if(RobotVec[robotId]->GetWorkBenchID() == RobotVec[robotId]->GetWantToCloseWBID() && RobotVec[robotId]->TypeArticleCarry == 0){
+                if(WorkBenchVec[RobotVec[robotId]->GetWorkBenchID()]->ProductStatus == 1){
+                    cout << "buy " << robotId << endl;
+                    fflush(stdout);
+                    BuySellFlag = 1;
+                }
+                // Cur[robotId] = (++Cur[robotId] % 4);
+                // RobotVec[robotId]->WantTOCloseWBKind = Order[robotId][Cur[robotId]];
+                // WorkBenchVec[RobotVec[robotId]->WorkBenchID] -> RobotScheduled = -1;
+                // RobotVec[robotId] -> HaveTarget = -1;
+            }
+            if(BuySellFlag == 1){
                 Cur[robotId] = (++Cur[robotId] % 4);
                 RobotVec[robotId]->WantTOCloseWBKind = Order[robotId][Cur[robotId]];
                 WorkBenchVec[RobotVec[robotId]->WorkBenchID] -> RobotScheduled = -1;
                 RobotVec[robotId] -> HaveTarget = -1;
             }
-            
         }
         printf("OK\n", frameID);
         fflush(stdout);
