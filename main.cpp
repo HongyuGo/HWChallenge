@@ -128,7 +128,7 @@ int FindMinDistanceTargetWB(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
     // exit(1);
     if(_WorkBenchVec[MinID] -> RobotScheduled == -1)
         _WorkBenchVec[MinID] -> RobotScheduled = _Robot->RobotID;
-    cerr << "MinID " << MinID << endl;
+    // cerr << "MinID " << MinID << endl;
     // cerr << "TargetWB " << _WorkBenchVec[MinID]->WorkBenchID << endl;
     return MinID;
 }
@@ -241,6 +241,10 @@ int main() {
         ReadInfo(WorkBenchNum, WorkBenchVec, RobotVec);
         vector<Workbench*> WorkBench456;
         vector<Workbench*> WorkBench7;
+        vector<Workbench*> WorkBench6;
+        vector<Workbench*> WorkBench5;
+        vector<Workbench*> WorkBench4;
+        int count4 = 0, count5 = 0, count6 = 0;
         for(i = 0; i < WorkBenchNum; i++){
             if(WorkBenchVec[i] -> ProductStatus == 1 && (WorkBenchVec[i] -> WorkBenchKind == 4 || WorkBenchVec[i] -> WorkBenchKind == 5 || WorkBenchVec[i] -> WorkBenchKind == 6 )){
                 WorkBench456.push_back(WorkBenchVec[i]);
@@ -248,8 +252,36 @@ int main() {
             if(WorkBenchVec[i] -> ProductStatus == 1 && WorkBenchVec[i] -> WorkBenchKind == 7){
                 WorkBench7.push_back(WorkBenchVec[i]);
             }
+            if(WorkBenchVec[i] -> ProductStatus == 1 && WorkBenchVec[i] -> WorkBenchKind == 6){
+                count6++;
+                WorkBench6.push_back(WorkBenchVec[i]);
+            }
+            if(WorkBenchVec[i] -> ProductStatus == 1 && WorkBenchVec[i] -> WorkBenchKind == 5){
+                count5++;
+                WorkBench5.push_back(WorkBenchVec[i]);
+            }
+            if(WorkBenchVec[i] -> ProductStatus == 1 && WorkBenchVec[i] -> WorkBenchKind == 4){
+                count4++;
+                WorkBench4.push_back(WorkBenchVec[i]);
+            }
         }
-        cerr << "WorkBench7 : " <<  WorkBench7.size() << endl;
+        int C = 0;
+        if(count4 <= count5){
+            if(count4 <= count6)
+                C = 4;
+            else    
+                C = 6;
+        }
+        else{
+            if(count5 <= count6)
+                C = 5;
+            else
+                C = 6;
+        }
+        Order[3] = Order[C - 4];
+        Order[3] = Order[C - 4];
+        // cerr << "WorkBench7 : " <<  WorkBench7.size() << endl;
+        
         for(i = 0; i < 4; i++){
             Buy7(RobotVec[i],WorkBench7);
             if(RobotVec[i] -> RobotMode == 3){
@@ -265,13 +297,13 @@ int main() {
                 RobotVec[i] ->RobotMode = 4;
             }
             if(RobotVec[i] -> RobotMode == 0){
-                // start = 0;
-                // if(All(WorkBenchSelf[Order], 2)){
-                //     swap(Order[i][0], Order[i][2]);
-                //     start = 2;
-                // }
-                // Cur[i] = (Cur[i] + start) % 4;
                 RobotVec[i]->WantTOCloseWBKind = Order[i][Cur[i]];
+                if(All(WorkBenchSelf[Order[i][1]], RobotVec[i]->WantTOCloseWBKind)){
+                    swap(Order[i][0], Order[i][2]);
+                    cerr << "SwapOK" << endl;
+                    RobotVec[i]->WantTOCloseWBKind = Order[i][Cur[i]];
+                    // exit(1);
+                }
                 AngleSpeed[i] =  CalculateDistance(RobotVec[i], WorkBenchSelf[RobotVec[i]->WantTOCloseWBKind]);
             }else if(RobotVec[i] -> RobotMode == 1){
                 Cur[i] = 0;
@@ -315,7 +347,7 @@ int main() {
             if(abs(AngleSpeed[i]) < 0.2)
                 LineSpeed[i] = 3;
             else
-                LineSpeed[i] = 0.5;
+                LineSpeed[i] = 1.5;
         }
         // cerr << "Speed" <<LineSpeed[0]<< endl;
         for(int robotId = 0; robotId < 4; robotId++){
@@ -432,8 +464,12 @@ void FlushProduct(Robot* _Robot, vector<Workbench*> _WorkBenchVec){
 
 bool All(vector<Workbench*> _WorkBenchVec, int Type){
     int i;
+    cerr << "WorkBenchvec[0]kind" << _WorkBenchVec[0] -> WorkBenchKind << endl;
+    if(_WorkBenchVec[0] -> WorkBenchKind == 1 || _WorkBenchVec[0] -> WorkBenchKind == 2 || _WorkBenchVec[0] -> WorkBenchKind == 3)
+        return false;
     for(i = 0; i < _WorkBenchVec.size(); i++){
-        cerr << "---------------" << _WorkBenchVec[i]-> MaterialStatus <<endl;
+        if(WorkBenchVec[0] -> WorkBenchKind == 6)
+            cerr << "WOkrbench6" << _WorkBenchVec[i]-> MaterialStatus <<endl;
         if((_WorkBenchVec[i]-> MaterialStatus & (1 << Type)) == 0){
             // exit(1);
             return false;
