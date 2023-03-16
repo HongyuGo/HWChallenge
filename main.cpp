@@ -9,7 +9,8 @@ vector<Workbench*>WorkBenchVec;
 vector<vector<Workbench*>> WorkBenchSelf(10);
 vector<Robot*>RobotVec;
 int Money;
-vector<double> RobotSetLineSpeed = {5.0,5.0,5.0,5.0};
+const double NormalSpeed = 6.0;
+vector<double> RobotSetLineSpeed = {NormalSpeed,NormalSpeed,NormalSpeed,NormalSpeed};
 vector<double> RobotSetAngleSpeed = {2.0,2.0,2.0,2.0};
 
 // char map[MAPLEN][MAPLEN];
@@ -21,6 +22,7 @@ bool All(vector<Workbench*>& _WorkBenchVec, int Type);
 bool All7(vector<Workbench*>& _WorkBenchVec, int Type, int* CheckID);
 bool IsBuy(int Kind, vector<vector<Workbench*>>& _WorkBenchSellSelf);
 double RobotCloseWorkBench(Robot* _Robot, vector<Workbench*>& _WorkBenchVec);
+double RobotCloseWall(Robot* _Robot);
 int start = 0;
 bool MapInit() {
     char line[1024];
@@ -368,8 +370,10 @@ int main() {
         // cerr << "WorkBench6" << WorkBenchSelf[6][1]->MaterialStatus << endl;
         printf("%d\n", frameID);
         for(i = 0; i < 4; i++){
-            if(abs(AngleSpeed[i]) < 0.2)
+            if(abs(AngleSpeed[i]) < 0.2){
                 LineSpeed[i] = RobotSetLineSpeed[i];
+                LineSpeed[i] = RobotCloseWall(RobotVec[i]);
+            }
             else
                 LineSpeed[i] = RobotCloseWorkBench(RobotVec[i], WorkBenchVec);
         }
@@ -397,10 +401,17 @@ int main() {
                 if(WorkBenchVec[RobotVec[robotId]->GetWorkBenchID()]->ProductStatus == 1 ){
                     int tmp;
                     if(!All7(WorkBenchSelf[7], WorkBenchVec[RobotVec[robotId]->GetWorkBenchID()]->WorkBenchKind, &tmp)){
-                        cout << "buy " << robotId << endl;
-                        fflush(stdout);
-                        BuySellFlag = 1;
-                        int ID = RobotVec[robotId]->WorkBenchID;
+                        if(9000 - frameID < 350 && WorkBenchVec[RobotVec[robotId]->GetWorkBenchID()]->WorkBenchKind == 7||
+                           9000 - frameID < 250 && WorkBenchVec[RobotVec[robotId]->GetWorkBenchID()]->WorkBenchKind == 6||
+                           9000 - frameID < 250 && WorkBenchVec[RobotVec[robotId]->GetWorkBenchID()]->WorkBenchKind == 5||
+                           9000 - frameID < 250 && WorkBenchVec[RobotVec[robotId]->GetWorkBenchID()]->WorkBenchKind == 4)
+                        {}
+                        else{
+                            cout << "buy " << robotId << endl;
+                            fflush(stdout);
+                            BuySellFlag = 1;
+                            int ID = RobotVec[robotId]->WorkBenchID;
+                        }
                     }
                     // if(find_if(WorkBench456.begin(), WorkBench456.end(),[ID](Workbench* work){return work->WorkBenchID == ID;}) != WorkBench456.end()){
                     //     WorkBench456.erase(WorkBench456.begin() + ID);
@@ -520,7 +531,8 @@ bool All7(vector<Workbench*>& _WorkBenchVec, int Type, int *CheckID){
     if(_WorkBenchVec.empty())
         return false;
     // cerr << "WorkBenchvec[0]kind" << _WorkBenchVec[0] -> WorkBenchKind << endl;
-    if(_WorkBenchVec[0] -> WorkBenchKind == 1 || _WorkBenchVec[0] -> WorkBenchKind == 2 || _WorkBenchVec[0] -> WorkBenchKind == 3)
+    // if(_WorkBenchVec[0] -> WorkBenchKind == 1 || _WorkBenchVec[0] -> WorkBenchKind == 2 || _WorkBenchVec[0] -> WorkBenchKind == 3)    
+    if(Type == 1 || Type == 2 || Type == 3)
         return false;
     for(i = 0; i < _WorkBenchVec.size(); i++){
         if((_WorkBenchVec[i]-> MaterialStatus & (1 << Type)) == 0){
@@ -548,8 +560,17 @@ bool IsBuy(int Kind, vector<vector<Workbench*>>& _WorkBenchSellSelf){
 }
 
 double RobotCloseWorkBench(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
-    if(abs(_Robot->Axis - WorkBenchVec[_Robot->WantToCloseWBID]->Axis) < 1 && _Robot->TypeArticleCarry != -1){
-        return 0.5;
+    if(abs(_Robot->Axis - WorkBenchVec[_Robot->WantToCloseWBID]->Axis) < 0.4 && _Robot->TypeArticleCarry != -1){
+        return -1.0;
     }
     return 1.0;
+}
+
+double RobotCloseWall(Robot* _Robot){
+    const double Limit = 6.0;
+    if(_Robot -> Axis[0] < Limit || _Robot -> Axis[0] > 50 - Limit)
+        return 4.0;
+    if(_Robot -> Axis[1] < Limit || _Robot -> Axis[1] > 50 - Limit)
+        return 4.0;
+    return NormalSpeed;
 }
