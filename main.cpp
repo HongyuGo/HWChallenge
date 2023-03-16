@@ -13,12 +13,12 @@ vector<Workbench *> WorkBenchVec;
 // 所有需要使用的函数
 bool MapInit();
 bool ReadInfo(int _WorkBenchNum, vector<Workbench *> _WorkBenchVec, vector<Robot *> _RobotVec);
-double Buy(Robot *Robot, vector<Workbench *> &WBProductReady);
+double Buy(Robot *Robot, vector<vector<Workbench *>> &WorkBenchReadySelf);
 double MoveBuy(Robot *Robot);
-int BuyFindVectorWBMinID(Robot *Robot, vector<Workbench *> &WBProductReady);
-double Sell(Robot *Robot, vector<Workbench *> &WBProductLoss);
+int BuyFindVectorWBMinID(Robot *Robot, vector<vector<Workbench *>> &WorkBenchReadySelf);
+double Sell(Robot *Robot);
 double MoveSell(Robot *Robot);
-int SellFindVectorWBMinID(Robot *Robot, vector<Workbench *> &WBProductLoss);
+int SellFindVectorWBMinID(Robot *Robot);
 double operator-(const vector<double> _left, const vector<double> _right);
 
 int main()
@@ -39,7 +39,11 @@ int main()
     ReadInfo(WorkBenchNum, WorkBenchVec, RobotVec);
     vector<Workbench *> WBProductReady;
     vector<Workbench *> WBProductLoss;
-    vector<vector<Workbench *>> WorkBenchLossSelf(10);
+    vector<vector<Workbench *>> WorkBenchReadySelf(10);
+    for (int i = 0; i < WorkBenchVec.size(); i++)
+    {
+      WorkBenchVec[i]->LockSell = 0;
+    }
     // 判断工作台产品格状态， 放入不同队列
     for (i = 0; i < WorkBenchNum; i++)
     {
@@ -49,37 +53,39 @@ int main()
         WBProductReady.push_back(WorkBenchVec[i]);
     }
     // 如果产品没有生产的工作台数不为0，那么分为9个不同类型的工作台组
-    if (!WBProductLoss.empty())
+    if (!WBProductReady.empty())
     {
-      WorkBenchAllocate(WBProductLoss, WorkBenchLossSelf);
+      WorkBenchAllocate(WBProductReady, WorkBenchReadySelf);
     }
 
     printf("%d\n", frameID);
 
     // 判断机器人当前状态，根据不同状态进入不同选择
     for (i = 0; i < 4; i++)
-    { // 未持有物品，且无目标工作台，且有产品的工作台数不为0 -> 进去Buy 寻找目标工作台
-      if (RobotVec[i]->TypeArticleCarry == 0 && RobotVec[i]->HaveTarget == -1 && WBProductReady.size() != 0)
+    {
+      // 持有物品，类型为TypeArticleCarry，但无目标工作台 -> Sell 寻找可以售卖的工作台
+      if (RobotVec[i]->TypeArticleCarry != 0 && RobotVec[i]->HaveTarget == -1)
       {
-        AngleSpeed[i] = Buy(RobotVec[i], WBProductReady);
-        cerr << "if1" << endl;
+        cerr << "Sell" << endl;
+        AngleSpeed[i] = Sell(RobotVec[i]);
+      }
+      // 未持有物品，且无目标工作台，且有产品的工作台数不为0 -> 进去Buy 寻找目标工作台
+      else if (RobotVec[i]->TypeArticleCarry == 0 && RobotVec[i]->HaveTarget == -1 && WBProductReady.size() != 0)
+      {
+        cerr << "Buy" << endl;
+        AngleSpeed[i] = Buy(RobotVec[i], WorkBenchReadySelf);
       }
       // 未持有物品，但有目标工作台 -> MoveBuy 向目标工作台移动，达到位置时购买
       else if (RobotVec[i]->TypeArticleCarry == 0 && RobotVec[i]->HaveTarget != -1)
       {
-        cerr << "if2" << endl;
+        cerr << "MoveBuy" << endl;
         AngleSpeed[i] = MoveBuy(RobotVec[i]);
       }
-      // 持有物品，类型为TypeArticleCarry，但无目标工作台 -> Sell 寻找可以售卖的工作台
-      else if (RobotVec[i]->TypeArticleCarry != 0 && RobotVec[i]->HaveTarget == -1 && WBProductLoss.size() != 0)
-      {
-        cerr << "if3" << endl;
-        AngleSpeed[i] = Sell(RobotVec[i], WBProductLoss);
-      }
+
       // 持有物品，类型为TypeArticleCarry，且有目标工作台 -> MoveSell 向目标工作台移动，达到位置时出售
       else if (RobotVec[i]->TypeArticleCarry != 0 && RobotVec[i]->HaveTarget != -1)
       {
-        cerr << "if4" << endl;
+        cerr << "MoveSell" << endl;
         AngleSpeed[i] = MoveSell(RobotVec[i]);
       }
       // if (RobotVec[i]->TypeArticleCarry != 0 && RobotVec[i]->HaveTarget == -1)
@@ -90,6 +96,7 @@ int main()
       //   exit(1);
       // }
     }
+    cerr << "frameID:" << frameID << endl;
     for (i = 0; i < 4; i++)
     {
       cerr << i << "target " << RobotVec[i]->HaveTarget << endl;
@@ -97,9 +104,9 @@ int main()
     for (i = 0; i < 4; i++)
     {
       if (abs(AngleSpeed[i]) < 0.2)
-        LineSpeed[i] = 3;
+        LineSpeed[i] = 5.5;
       else
-        LineSpeed[i] = 0.5;
+        LineSpeed[i] = 1;
     }
 
     for (int robotId = 0; robotId < 4; robotId++)
@@ -196,10 +203,11 @@ bool ReadInfo(int _WorkBenchNum, vector<Workbench *> _WorkBenchVec, vector<Robot
 }
 
 // 根据最近原则，寻找机器人买物品的目标工作台
-double Buy(Robot *Robot, vector<Workbench *> &WBProductReady)
+double Buy(Robot *Robot, vector<vector<Workbench *>> &WorkBenchReadySelf)
 {
   int WBMinID;
-  WBMinID = BuyFindVectorWBMinID(Robot, WBProductReady);
+  WBMinID = BuyFindVectorWBMinID(Robot, WorkBenchReadySelf);
+  cerr << "my buy target is " << WBMinID << endl;
   Robot->HaveTarget = WBMinID;
   WorkBenchVec[WBMinID]->LockBuy = 1;
   // WBProductReady.erase(WBProductReady.begin() + ID[0]);
@@ -209,8 +217,9 @@ double Buy(Robot *Robot, vector<Workbench *> &WBProductReady)
 // 机器人向目标工作台移动，并检测是否到达，到达直接购买商品
 double MoveBuy(Robot *Robot)
 {
-  int Target;
-  Target = Robot->HaveTarget;
+  int flagbuy = 0;                                // 移动的路上就检测是否可以卖出去
+  int Target = Robot->HaveTarget;                 // 前往购买的工作台ID
+  int Kind = WorkBenchVec[Target]->WorkBenchKind; // 前往购买的工作台类型
   // 如果当前已经到达目标工作台，则此帧不移动，购买商品
   if (Target == Robot->WorkBenchID)
   {
@@ -218,80 +227,533 @@ double MoveBuy(Robot *Robot)
     fflush(stdout);
     Robot->HaveTarget = -1;
     WorkBenchVec[Target]->LockBuy = 0;
+    return 0;
   }
   // 未到达，则继续向目标工作台移动
   else
   {
-    int flag = 0;
-    int quadrant = 0;
-    vector<double> axis = Robot->GetAxis();
-    double XDistance = WorkBenchVec[Target]->GetAxis()[0] - axis[0];
-    double YDistance = WorkBenchVec[Target]->GetAxis()[1] - axis[1];
-    if (YDistance > 0.0 && XDistance > 0.0)
-      quadrant = 1;
-    else if (YDistance < 0.0 && XDistance > 0.0)
-      quadrant = 4;
-    else if (YDistance > 0.0 && XDistance < 0.0)
-      quadrant = 2;
-    else
-      quadrant = 3;
+    // 判断当前要去购买的商品是否能被出售
+    switch (Kind)
+    {
+    case 7:
+    {
+      flagbuy = 1;
+      break;
+    }
+    case 6:
+    {
+      for (int k = 0; k < WorkBenchVec.size(); k++)
+      {
+        if ((WorkBenchVec[k]->WorkBenchKind == 7 || WorkBenchVec[k]->WorkBenchKind == 9) && WorkBenchVec[k]->LockSell6 == 0)
+        {
+          int Material = WorkBenchVec[k]->MaterialStatus;
+          if (Material == 0)
+          {
+            flagbuy = 1;
+            break;
+          }
+          else
+          {
+            if (Material & (1 << Kind))
+            {
+            }
+            else
+            {
+              flagbuy = 1;
+              break;
+            }
+          }
+        }
+      }
+      break;
+    }
+    case 5:
+    {
+      for (int k = 0; k < WorkBenchVec.size(); k++)
+      {
+        if ((WorkBenchVec[k]->WorkBenchKind == 7 || WorkBenchVec[k]->WorkBenchKind == 9) && WorkBenchVec[k]->LockSell5 == 0)
+        {
+          int Material = WorkBenchVec[k]->MaterialStatus;
+          if (Material == 0)
+          {
+            flagbuy = 1;
+            break;
+          }
+          else
+          {
+            if (Material & (1 << Kind))
+            {
+            }
+            else
+            {
+              flagbuy = 1;
+              break;
+            }
+          }
+        }
+      }
+      break;
+    }
+    case 4:
+    {
+      for (int k = 0; k < WorkBenchVec.size(); k++)
+      {
+        if ((WorkBenchVec[k]->WorkBenchKind == 7 || WorkBenchVec[k]->WorkBenchKind == 9) && WorkBenchVec[k]->LockSell4 == 0)
+        {
+          int Material = WorkBenchVec[k]->MaterialStatus;
+          if (Material == 0)
+          {
+            flagbuy = 1;
+            break;
+          }
+          else
+          {
+            if (Material & (1 << Kind))
+            {
+            }
+            else
+            {
+              flagbuy = 1;
+              break;
+            }
+          }
+        }
+      }
+      break;
+    }
+    case 3:
+    {
+      for (int k = 0; k < WorkBenchVec.size(); k++)
+      {
+        if ((WorkBenchVec[k]->WorkBenchKind == 5 || WorkBenchVec[k]->WorkBenchKind == 6 || WorkBenchVec[k]->WorkBenchKind == 9) && WorkBenchVec[k]->LockSell3 == 0)
+        {
 
-    double Angle = atan2(YDistance, XDistance);
-    double AngleDifference = abs(Angle - Robot->GetTowards());
-    if (abs(AngleDifference) < 0.5)
-      flag = Angle - Robot->GetTowards() > 0.0 ? 1 : -1; // 1:ni -1 sun;
+          int Material = WorkBenchVec[k]->MaterialStatus;
+          cerr << "WB" << k << " " << Material << " " << WorkBenchVec[k]->WorkBenchKind << endl;
+          if (Material == 0)
+          {
+            flagbuy = 1;
+            break;
+          }
+          else
+          {
+            if (Material & (1 << Kind))
+            {
+            }
+            else
+            {
+              flagbuy = 1;
+              break;
+            }
+          }
+        }
+      }
+      break;
+    }
+    case 2:
+    {
+      for (int k = 0; k < WorkBenchVec.size(); k++)
+      {
+        if ((WorkBenchVec[k]->WorkBenchKind == 4 || WorkBenchVec[k]->WorkBenchKind == 6 || WorkBenchVec[k]->WorkBenchKind == 9) && WorkBenchVec[k]->LockSell2 == 0)
+        {
+          int Material = WorkBenchVec[k]->MaterialStatus;
+          if (Material == 0)
+          {
+            flagbuy = 1;
+            break;
+          }
+          else
+          {
+            if (Material & (1 << Kind))
+            {
+            }
+            else
+            {
+              flagbuy = 1;
+              break;
+            }
+          }
+        }
+      }
+      break;
+    }
+    case 1:
+    {
+      for (int k = 0; k < WorkBenchVec.size(); k++)
+      {
+        if ((WorkBenchVec[k]->WorkBenchKind == 4 || WorkBenchVec[k]->WorkBenchKind == 5 || WorkBenchVec[k]->WorkBenchKind == 9) && WorkBenchVec[k]->LockSell1 == 0)
+        {
+          int Material = WorkBenchVec[k]->MaterialStatus;
+          if (Material == 0)
+          {
+            flagbuy = 1;
+            break;
+          }
+          else
+          {
+            if (Material & (1 << Kind))
+            {
+            }
+            else
+            {
+              flagbuy = 1;
+              break;
+            }
+          }
+        }
+      }
+      break;
+    }
+    }
+    if (flagbuy)
+    {
+      int flag = 0;
+      int quadrant = 0;
+      vector<double> axis = Robot->GetAxis();
+      double XDistance = WorkBenchVec[Target]->GetAxis()[0] - axis[0];
+      double YDistance = WorkBenchVec[Target]->GetAxis()[1] - axis[1];
+      if (YDistance > 0.0 && XDistance > 0.0)
+        quadrant = 1;
+      else if (YDistance < 0.0 && XDistance > 0.0)
+        quadrant = 4;
+      else if (YDistance > 0.0 && XDistance < 0.0)
+        quadrant = 2;
+      else
+        quadrant = 3;
+
+      double Angle = atan2(YDistance, XDistance);
+      double AngleDifference = abs(Angle - Robot->GetTowards());
+      if (abs(AngleDifference) < 0.5)
+        flag = Angle - Robot->GetTowards() > 0.0 ? 1 : -1; // 1:ni -1 sun;
+      else
+        flag = 1;
+      double RealDis = sqrt(XDistance * XDistance + YDistance * YDistance);
+      Robot->GetWantToCloseWBID() = WorkBenchVec[Target]->GetWorkBenchID();
+      Robot->GetRobotWorkBenchDis() = RealDis;
+      Robot->GetAngleDifference() = AngleDifference;
+      double AngleSpeed = AngleDifference > 1.5 ? 1.5 : AngleDifference;
+      return AngleSpeed * flag;
+    }
     else
-      flag = 1;
-    double RealDis = sqrt(XDistance * XDistance + YDistance * YDistance);
-    Robot->GetWantToCloseWBID() = WorkBenchVec[Target]->GetWorkBenchID();
-    Robot->GetRobotWorkBenchDis() = RealDis;
-    Robot->GetAngleDifference() = AngleDifference;
-    double AngleSpeed = AngleDifference > 1.5 ? 1.5 : AngleDifference;
-    return AngleSpeed * flag;
+    {
+      Robot->HaveTarget = -1;
+      WorkBenchVec[Target]->LockBuy = 0;
+      return 0;
+    }
   }
 }
 
 // 找到离机器人最近的，且未被买锁定的工作台，返回其全局索引
-int BuyFindVectorWBMinID(Robot *Robot, vector<Workbench *> &WBProductReady)
+int BuyFindVectorWBMinID(Robot *Robot, vector<vector<Workbench *>> &WorkBenchReadySelf)
 {
-  int i;
-  int VectorWBMinID = WBProductReady.size() - 1;
+  int VectorWBMinID = -1;
   vector<double> axis = Robot->GetAxis();
   double MinDistance = 1e10;
-  for (i = 0; i < WBProductReady.size(); i++)
+  int flag[8] = {0};
+  flag[7] = 1;
+  int flagout = 0;            // 标志是否找到了能够买的工作台
+  for (int i = 1; i < 7; i++) // 判断每种类别的商品是否能被出售
   {
-    double DistanceTmp = axis - WBProductReady[i]->GetAxis();
-    if (DistanceTmp < MinDistance && WBProductReady[i]->LockBuy == 0)
+    switch (i)
     {
-      MinDistance = DistanceTmp;
-      VectorWBMinID = i;
+    case 6:
+    {
+      for (int k = 0; k < WorkBenchVec.size(); k++)
+      {
+        if ((WorkBenchVec[k]->WorkBenchKind == 7 || WorkBenchVec[k]->WorkBenchKind == 9) && WorkBenchVec[k]->LockSell6 == 0 && WorkBenchVec[k]->LockBuy == 0)
+        {
+          int Material = WorkBenchVec[k]->MaterialStatus;
+          if (Material == 0)
+          {
+            flag[6] = 1;
+            break;
+          }
+          else
+          {
+            if (Material & (1 << i))
+            {
+            }
+            else
+            {
+              flag[6] = 1;
+              break;
+            }
+          }
+        }
+      }
+      break;
+    }
+    case 5:
+    {
+      for (int k = 0; k < WorkBenchVec.size(); k++)
+      {
+        if ((WorkBenchVec[k]->WorkBenchKind == 7 || WorkBenchVec[k]->WorkBenchKind == 9) && WorkBenchVec[k]->LockSell5 == 0 && WorkBenchVec[k]->LockBuy == 0)
+        {
+          int Material = WorkBenchVec[k]->MaterialStatus;
+          if (Material == 0)
+          {
+            flag[5] = 1;
+            break;
+          }
+          else
+          {
+            if (Material & (1 << i))
+            {
+            }
+            else
+            {
+              flag[5] = 1;
+              break;
+            }
+          }
+        }
+      }
+      break;
+    }
+    case 4:
+    {
+      for (int k = 0; k < WorkBenchVec.size(); k++)
+      {
+        if ((WorkBenchVec[k]->WorkBenchKind == 7 || WorkBenchVec[k]->WorkBenchKind == 9) && WorkBenchVec[k]->LockSell4 == 0 && WorkBenchVec[k]->LockBuy == 0)
+        {
+          int Material = WorkBenchVec[k]->MaterialStatus;
+          if (Material == 0)
+          {
+            flag[4] = 1;
+            break;
+          }
+          else
+          {
+            if (Material & (1 << i))
+            {
+            }
+            else
+            {
+              flag[4] = 1;
+              break;
+            }
+          }
+        }
+      }
+      break;
+    }
+    case 3:
+    {
+      for (int k = 0; k < WorkBenchVec.size(); k++)
+      {
+        if ((WorkBenchVec[k]->WorkBenchKind == 5 || WorkBenchVec[k]->WorkBenchKind == 6 || WorkBenchVec[k]->WorkBenchKind == 9) && WorkBenchVec[k]->LockSell3 == 0 && WorkBenchVec[k]->LockBuy == 0)
+        {
+
+          int Material = WorkBenchVec[k]->MaterialStatus;
+          cerr << "WB" << k << " " << Material << " " << WorkBenchVec[k]->WorkBenchKind << endl;
+          if (Material == 0)
+          {
+            flag[3] = 1;
+            break;
+          }
+          else
+          {
+            if (Material & (1 << i))
+            {
+            }
+            else
+            {
+              flag[3] = 1;
+              break;
+            }
+          }
+        }
+      }
+      break;
+    }
+    case 2:
+    {
+      for (int k = 0; k < WorkBenchVec.size(); k++)
+      {
+        if ((WorkBenchVec[k]->WorkBenchKind == 4 || WorkBenchVec[k]->WorkBenchKind == 6 || WorkBenchVec[k]->WorkBenchKind == 9) && WorkBenchVec[k]->LockSell2 == 0 && WorkBenchVec[k]->LockBuy == 0)
+        {
+          int Material = WorkBenchVec[k]->MaterialStatus;
+          if (Material == 0)
+          {
+            flag[2] = 1;
+            break;
+          }
+          else
+          {
+            if (Material & (1 << i))
+            {
+            }
+            else
+            {
+              flag[2] = 1;
+              break;
+            }
+          }
+        }
+      }
+      break;
+    }
+    case 1:
+    {
+      for (int k = 0; k < WorkBenchVec.size(); k++)
+      {
+        if ((WorkBenchVec[k]->WorkBenchKind == 4 || WorkBenchVec[k]->WorkBenchKind == 5 || WorkBenchVec[k]->WorkBenchKind == 9) && WorkBenchVec[k]->LockSell1 == 0 && WorkBenchVec[k]->LockBuy == 0)
+        {
+          int Material = WorkBenchVec[k]->MaterialStatus;
+          if (Material == 0)
+          {
+            flag[1] = 1;
+            break;
+          }
+          else
+          {
+            if (Material & (1 << i))
+            {
+            }
+            else
+            {
+              flag[1] = 1;
+              break;
+            }
+          }
+        }
+      }
+      break;
+    }
     }
   }
-  return WBProductReady[VectorWBMinID]->WorkBenchID;
+  for (int i = 1; i < 8; i++)
+  {
+    cerr << "flag[" << i << "]=" << flag[i] << " ";
+  }
+  cerr << endl;
+  for (int i = 7; i > 0; i--) // 从第7类工作台开始到第1类都能生产物品，优先购买高品类
+  {
+    if (flag[i])
+    {
+      for (int j = 0; j < WorkBenchReadySelf[i].size(); j++)
+      {
+        // 判断当前产品能否拿（拿了能不能卖出去）
+        double DistanceTmp = axis - WorkBenchReadySelf[i][j]->GetAxis();
+        if (DistanceTmp < MinDistance && WorkBenchReadySelf[i][j]->LockBuy == 0)
+        {
+          MinDistance = DistanceTmp;
+          VectorWBMinID = j;
+        }
+      }
+
+      if (VectorWBMinID != -1)
+      {
+        cerr << "kind:" << i << " MinID:" << VectorWBMinID << " ggggggggg" << endl;
+        return WorkBenchReadySelf[i][VectorWBMinID]->WorkBenchID;
+      }
+      else
+      {
+        continue;
+      }
+      // return WorkBenchReadySelf[i][VectorWBMinID]->WorkBenchID;
+    }
+  }
 }
 
 // 根据最近原则，寻找机器人卖物品的目标工作台
-double Sell(Robot *Robot, vector<Workbench *> &WBProductLoss)
+double Sell(Robot *Robot)
 {
-  int WBMinID;
-  WBMinID = SellFindVectorWBMinID(Robot, WBProductLoss);
+  int WBMinID = SellFindVectorWBMinID(Robot);
+  cerr << "my sell target is " << WBMinID << endl;
+  int ProductID = Robot->TypeArticleCarry;
   Robot->HaveTarget = WBMinID;
-  WorkBenchVec[WBMinID]->LockSell = 1;
+  switch (ProductID)
+  {
+  case 1:
+  {
+    WorkBenchVec[WBMinID]->LockSell1 = 1;
+    break;
+  }
+  case 2:
+  {
+    WorkBenchVec[WBMinID]->LockSell2 = 1;
+    break;
+  }
+  case 3:
+  {
+    WorkBenchVec[WBMinID]->LockSell3 = 1;
+    break;
+  }
+  case 4:
+  {
+    WorkBenchVec[WBMinID]->LockSell4 = 1;
+    break;
+  }
+  case 5:
+  {
+    WorkBenchVec[WBMinID]->LockSell5 = 1;
+    break;
+  }
+  case 6:
+  {
+    WorkBenchVec[WBMinID]->LockSell6 = 1;
+    break;
+  }
+  case 7:
+  {
+    WorkBenchVec[WBMinID]->LockSell7 = 1;
+    break;
+  }
+  }
   return MoveSell(Robot);
 }
 
 // 机器人向目标工作台移动，并检测是否到达，到达直接出售商品
 double MoveSell(Robot *Robot)
 {
-  int Target;
-  Target = Robot->HaveTarget;
+  int Target = Robot->HaveTarget;
+  int ProductID = Robot->TypeArticleCarry;
   // 如果当前已经到达目标工作台，则此帧不移动，出售商品
   if (Target == Robot->WorkBenchID)
   {
     cout << "sell " << Robot->RobotID << endl;
     fflush(stdout);
     Robot->HaveTarget = -1;
-    WorkBenchVec[Target]->LockSell = 0;
+    switch (ProductID)
+    {
+    case 1:
+    {
+      WorkBenchVec[Target]->LockSell1 = 0;
+      break;
+    }
+    case 2:
+    {
+      WorkBenchVec[Target]->LockSell2 = 0;
+      break;
+    }
+    case 3:
+    {
+      WorkBenchVec[Target]->LockSell3 = 0;
+      break;
+    }
+    case 4:
+    {
+      WorkBenchVec[Target]->LockSell4 = 0;
+      break;
+    }
+    case 5:
+    {
+      WorkBenchVec[Target]->LockSell5 = 0;
+      break;
+    }
+    case 6:
+    {
+      WorkBenchVec[Target]->LockSell6 = 0;
+      break;
+    }
+    case 7:
+    {
+      WorkBenchVec[Target]->LockSell7 = 0;
+      break;
+    }
+    }
+    return 0;
   }
   // 未到达，则继续向目标工作台移动
   else
@@ -325,226 +787,279 @@ double MoveSell(Robot *Robot)
   }
 }
 
-// 找到离机器人最近的，且未被买锁定的工作台，返回其全局索引
-int SellFindVectorWBMinID(Robot *Robot, vector<Workbench *> &WBProductLoss)
+// 找到离机器人最近的，且未被卖锁定的工作台，返回其全局索引
+int SellFindVectorWBMinID(Robot *Robot)
 {
   int i;
   int ProductID = Robot->TypeArticleCarry; // 当前机器人携带的物品类型
-  int VectorWBMinID = WBProductLoss.size() - 1;
+  int VectorWBMinID = -1;
   vector<double> axis = Robot->GetAxis();
   double MinDistance = 1e10;
   switch (ProductID)
   {
   case 1:
   {
-    for (i = 0; i < WBProductLoss.size(); i++)
+    for (i = 0; i < WorkBenchVec.size(); i++)
     {
-      int flag = 0;
-      int Material = WBProductLoss[i]->MaterialStatus;
-      double DistanceTmp = axis - WBProductLoss[i]->GetAxis();
-      if (Material == 0)
+      double DistanceTmp = axis - WorkBenchVec[i]->GetAxis();
+      if (WorkBenchVec[i]->WorkBenchKind == 4 || WorkBenchVec[i]->WorkBenchKind == 5)
       {
-        flag = 0;
-      }
-      else
-      {
-        if (Material & (1 << ProductID))
-        {
-          continue;
-        }
-        else
+        int flag = 0;
+        int Material = WorkBenchVec[i]->MaterialStatus;
+        if (Material == 0)
         {
           flag = 0;
         }
+        else
+        {
+          if (Material & (1 << ProductID))
+          {
+            continue;
+          }
+          else
+          {
+            flag = 0;
+          }
+        }
+        if (DistanceTmp < MinDistance && WorkBenchVec[i]->LockSell1 == 0 && flag == 0)
+        {
+          MinDistance = DistanceTmp;
+          VectorWBMinID = i;
+        }
       }
-      if (DistanceTmp < MinDistance && WBProductLoss[i]->LockSell == 0 && flag == 0 && (WBProductLoss[i]->WorkBenchKind == 4 || WBProductLoss[i]->WorkBenchKind == 5 || WBProductLoss[i]->WorkBenchKind == 9))
+      else if (WorkBenchVec[i]->WorkBenchKind == 9)
       {
-        MinDistance = DistanceTmp;
-        VectorWBMinID = i;
+        if (DistanceTmp < MinDistance && WorkBenchVec[i]->LockSell1 == 0)
+        {
+          MinDistance = DistanceTmp;
+          VectorWBMinID = i;
+        }
       }
     }
-    return WBProductLoss[VectorWBMinID]->WorkBenchID;
+
+    return VectorWBMinID;
     // 如果一种类型的工作台全部用完，应该设置销毁。1.设置销毁位2.随机选一个3.等待几帧走远了再找当时最近的
   }
   case 2:
   {
-    for (i = 0; i < WBProductLoss.size(); i++)
+    for (i = 0; i < WorkBenchVec.size(); i++)
     {
-      int flag = 0;
-      int Material = WBProductLoss[i]->MaterialStatus;
-      double DistanceTmp = axis - WBProductLoss[i]->GetAxis();
-      if (Material == 0)
+      double DistanceTmp = axis - WorkBenchVec[i]->GetAxis();
+      if (WorkBenchVec[i]->WorkBenchKind == 4 || WorkBenchVec[i]->WorkBenchKind == 6)
       {
-        flag = 0;
-      }
-      else
-      {
-        if (Material & (1 << ProductID))
-        {
-          continue;
-        }
-        else
+        int flag = 0;
+        int Material = WorkBenchVec[i]->MaterialStatus;
+        if (Material == 0)
         {
           flag = 0;
         }
+        else
+        {
+          if (Material & (1 << ProductID))
+          {
+            continue;
+          }
+          else
+          {
+            flag = 0;
+          }
+        }
+        if (DistanceTmp < MinDistance && WorkBenchVec[i]->LockSell2 == 0 && flag == 0)
+        {
+          MinDistance = DistanceTmp;
+          VectorWBMinID = i;
+        }
       }
-      if (DistanceTmp < MinDistance && WBProductLoss[i]->LockSell == 0 && flag == 0 && (WBProductLoss[i]->WorkBenchKind == 4 || WBProductLoss[i]->WorkBenchKind == 6 || WBProductLoss[i]->WorkBenchKind == 9))
+      else if (WorkBenchVec[i]->WorkBenchKind == 9)
       {
-        MinDistance = DistanceTmp;
-        VectorWBMinID = i;
+        if (DistanceTmp < MinDistance && WorkBenchVec[i]->LockSell2 == 0)
+        {
+          MinDistance = DistanceTmp;
+          VectorWBMinID = i;
+        }
       }
     }
-    return WBProductLoss[VectorWBMinID]->WorkBenchID;
+    return VectorWBMinID;
   }
   case 3:
   {
-    for (i = 0; i < WBProductLoss.size(); i++)
+    for (i = 0; i < WorkBenchVec.size(); i++)
     {
-      int flag = 0;
-      int Material = WBProductLoss[i]->MaterialStatus;
-      double DistanceTmp = axis - WBProductLoss[i]->GetAxis();
-      if (Material == 0)
+      double DistanceTmp = axis - WorkBenchVec[i]->GetAxis();
+      if (WorkBenchVec[i]->WorkBenchKind == 5 || WorkBenchVec[i]->WorkBenchKind == 6)
       {
-        flag = 0;
-      }
-      else
-      {
-        if (Material & (1 << ProductID))
-        {
-          continue;
-        }
-        else
+        int flag = 0;
+        int Material = WorkBenchVec[i]->MaterialStatus;
+        if (Material == 0)
         {
           flag = 0;
         }
+        else
+        {
+          if (Material & (1 << ProductID))
+          {
+            continue;
+          }
+          else
+          {
+            flag = 0;
+          }
+        }
+        if (DistanceTmp < MinDistance && WorkBenchVec[i]->LockSell3 == 0 && flag == 0)
+        {
+          MinDistance = DistanceTmp;
+          VectorWBMinID = i;
+        }
       }
-      if (DistanceTmp < MinDistance && WBProductLoss[i]->LockSell == 0 && flag == 0 && (WBProductLoss[i]->WorkBenchKind == 5 || WBProductLoss[i]->WorkBenchKind == 6 || WBProductLoss[i]->WorkBenchKind == 9))
+      else if (WorkBenchVec[i]->WorkBenchKind == 9)
       {
-        MinDistance = DistanceTmp;
-        VectorWBMinID = i;
+        if (DistanceTmp < MinDistance && WorkBenchVec[i]->LockSell3 == 0)
+        {
+          MinDistance = DistanceTmp;
+          VectorWBMinID = i;
+        }
       }
     }
-    return WBProductLoss[VectorWBMinID]->WorkBenchID;
+    return VectorWBMinID;
   }
   case 4:
   {
-    for (i = 0; i < WBProductLoss.size(); i++)
+    for (i = 0; i < WorkBenchVec.size(); i++)
     {
-      int flag = 0;
-      int Material = WBProductLoss[i]->MaterialStatus;
-      double DistanceTmp = axis - WBProductLoss[i]->GetAxis();
-      if (Material == 0)
+      double DistanceTmp = axis - WorkBenchVec[i]->GetAxis();
+      if (WorkBenchVec[i]->WorkBenchKind == 7)
       {
-        flag = 0;
-      }
-      else
-      {
-        if (Material & (1 << ProductID))
-        {
-          continue;
-        }
-        else
+        int flag = 0;
+        int Material = WorkBenchVec[i]->MaterialStatus;
+        if (Material == 0)
         {
           flag = 0;
         }
+        else
+        {
+          if (Material & (1 << ProductID))
+          {
+            continue;
+          }
+          else
+          {
+            flag = 0;
+          }
+        }
+        if (DistanceTmp < MinDistance && WorkBenchVec[i]->LockSell4 == 0 && flag == 0)
+        {
+          MinDistance = DistanceTmp;
+          VectorWBMinID = i;
+        }
       }
-      if (DistanceTmp < MinDistance && WBProductLoss[i]->LockSell == 0 && flag == 0 && (WBProductLoss[i]->WorkBenchKind == 7 || WBProductLoss[i]->WorkBenchKind == 9))
+      else if (WorkBenchVec[i]->WorkBenchKind == 9)
       {
-        MinDistance = DistanceTmp;
-        VectorWBMinID = i;
+        if (DistanceTmp < MinDistance && WorkBenchVec[i]->LockSell4 == 0)
+        {
+          MinDistance = DistanceTmp;
+          VectorWBMinID = i;
+        }
       }
     }
-    return WBProductLoss[VectorWBMinID]->WorkBenchID;
+    return VectorWBMinID;
   }
   case 5:
   {
-    for (i = 0; i < WBProductLoss.size(); i++)
+    for (i = 0; i < WorkBenchVec.size(); i++)
     {
-      int flag = 0;
-      int Material = WBProductLoss[i]->MaterialStatus;
-      double DistanceTmp = axis - WBProductLoss[i]->GetAxis();
-      if (Material == 0)
+      double DistanceTmp = axis - WorkBenchVec[i]->GetAxis();
+      if (WorkBenchVec[i]->WorkBenchKind == 7)
       {
-        flag = 0;
-      }
-      else
-      {
-        if (Material & (1 << ProductID))
-        {
-          continue;
-        }
-        else
+        int flag = 0;
+        int Material = WorkBenchVec[i]->MaterialStatus;
+        if (Material == 0)
         {
           flag = 0;
         }
+        else
+        {
+          if (Material & (1 << ProductID))
+          {
+            continue;
+          }
+          else
+          {
+            flag = 0;
+          }
+        }
+        if (DistanceTmp < MinDistance && WorkBenchVec[i]->LockSell5 == 0 && flag == 0)
+        {
+          MinDistance = DistanceTmp;
+          VectorWBMinID = i;
+        }
       }
-      if (DistanceTmp < MinDistance && WBProductLoss[i]->LockSell == 0 && flag == 0 && (WBProductLoss[i]->WorkBenchKind == 7 || WBProductLoss[i]->WorkBenchKind == 9))
+      else if (WorkBenchVec[i]->WorkBenchKind == 9)
       {
-        MinDistance = DistanceTmp;
-        VectorWBMinID = i;
+        if (DistanceTmp < MinDistance && WorkBenchVec[i]->LockSell5 == 0)
+        {
+          MinDistance = DistanceTmp;
+          VectorWBMinID = i;
+        }
       }
     }
-    return WBProductLoss[VectorWBMinID]->WorkBenchID;
+    return VectorWBMinID;
   }
   case 6:
   {
-    for (i = 0; i < WBProductLoss.size(); i++)
+    for (i = 0; i < WorkBenchVec.size(); i++)
     {
-      int flag = 0;
-      int Material = WBProductLoss[i]->MaterialStatus;
-      double DistanceTmp = axis - WBProductLoss[i]->GetAxis();
-      if (Material == 0)
+      double DistanceTmp = axis - WorkBenchVec[i]->GetAxis();
+      if (WorkBenchVec[i]->WorkBenchKind == 7)
       {
-        flag = 0;
-      }
-      else
-      {
-        if (Material & (1 << ProductID))
-        {
-          continue;
-        }
-        else
+        int flag = 0;
+        int Material = WorkBenchVec[i]->MaterialStatus;
+        if (Material == 0)
         {
           flag = 0;
         }
+        else
+        {
+          if (Material & (1 << ProductID))
+          {
+            continue;
+          }
+          else
+          {
+            flag = 0;
+          }
+        }
+        if (DistanceTmp < MinDistance && WorkBenchVec[i]->LockSell6 == 0 && flag == 0)
+        {
+          MinDistance = DistanceTmp;
+          VectorWBMinID = i;
+        }
       }
-      if (DistanceTmp < MinDistance && WBProductLoss[i]->LockSell == 0 && flag == 0 && (WBProductLoss[i]->WorkBenchKind == 7 || WBProductLoss[i]->WorkBenchKind == 9))
+      else if (WorkBenchVec[i]->WorkBenchKind == 9)
       {
-        MinDistance = DistanceTmp;
-        VectorWBMinID = i;
+        if (DistanceTmp < MinDistance && WorkBenchVec[i]->LockSell6 == 0)
+        {
+          MinDistance = DistanceTmp;
+          VectorWBMinID = i;
+        }
       }
     }
-    return WBProductLoss[VectorWBMinID]->WorkBenchID;
+    return VectorWBMinID;
   }
   case 7:
   {
-    for (i = 0; i < WBProductLoss.size(); i++)
+    for (i = 0; i < WorkBenchVec.size(); i++)
     {
-      int flag = 0;
-      int Material = WBProductLoss[i]->MaterialStatus;
-      double DistanceTmp = axis - WBProductLoss[i]->GetAxis();
-      if (Material == 0)
+      double DistanceTmp = axis - WorkBenchVec[i]->GetAxis();
+      if (WorkBenchVec[i]->WorkBenchKind == 8 || WorkBenchVec[i]->WorkBenchKind == 9)
       {
-        flag = 0;
-      }
-      else
-      {
-        if (Material & (1 << ProductID))
+        if (DistanceTmp < MinDistance && WorkBenchVec[i]->LockSell7 == 0)
         {
-          continue;
+          MinDistance = DistanceTmp;
+          VectorWBMinID = i;
         }
-        else
-        {
-          flag = 0;
-        }
-      }
-      if (DistanceTmp < MinDistance && WBProductLoss[i]->LockSell == 0 && flag == 0 && (WBProductLoss[i]->WorkBenchKind == 8 || WBProductLoss[i]->WorkBenchKind == 9))
-      {
-        MinDistance = DistanceTmp;
-        VectorWBMinID = i;
       }
     }
-    return WBProductLoss[VectorWBMinID]->WorkBenchID;
+    return VectorWBMinID;
   }
   }
 }

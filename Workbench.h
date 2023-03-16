@@ -53,8 +53,16 @@ public:
      int SellingPrice;
      int ProductStatus = 0; // 1:have, 0:not have
      int RobotScheduled = 0;
-     int LockBuy = 0;  // 1表示上买锁
-     int LockSell = 0; // 1表示上卖锁
+     int LockBuy = 0;   // 1表示上买锁
+     int LockSell = 0;  // 控制同一帧中的购买
+     int LockSell1 = 0; // 1表示上卖锁
+     int LockSell2 = 0;
+     int LockSell3 = 0;
+     int LockSell4 = 0;
+     int LockSell5 = 0;
+     int LockSell6 = 0;
+     int LockSell7 = 0;
+
 public:
      Workbench(char _WorkBenchKind, const vector<double> &_axis, int _WorkBenchID);
      int &GetWorkBenchKind() { return WorkBenchKind; }
