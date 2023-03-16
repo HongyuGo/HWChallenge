@@ -63,7 +63,7 @@ void Workbench::ShowWorkBench()const{
     cerr << endl;
 }
 
-bool Workbench::HaveLock(int CarryType, vector<Robot*>& _Robot){
+bool Workbench::HaveLock(int CarryType, vector<Robot*>& _Robot, int ID){
     // cerr << "RobotScheduled : " << RobotScheduled << endl;
     if(CarryType == 0){
         if(RobotScheduled == -1)
@@ -71,11 +71,15 @@ bool Workbench::HaveLock(int CarryType, vector<Robot*>& _Robot){
         else   
             return true;
     }else{
+        if(WorkBenchID == 14){
+            cerr << MaterialStatus << ' ' << CarryType <<' ' << RobotScheduled << endl;
+            // exit(1);
+        }
         // cerr << "WorBenchID" << WorkBenchID << endl;
         // exit(1);
         if(MaterialStatus & (1 << CarryType)){//如果工作台有了对应材料，锁了
             return true;
-        }else if(RobotScheduled != -1 && _Robot[RobotScheduled]->TypeArticleCarry == CarryType){//预约工作台的机器人带的材料和输入的材料一致， 锁了
+        }else if(RobotScheduled != -1 && _Robot[RobotScheduled]->TypeArticleCarry == CarryType && RobotScheduled != ID){//预约工作台的机器人带的材料和输入的材料一致， 锁了
             // exit(1);
             return true;
         }else{

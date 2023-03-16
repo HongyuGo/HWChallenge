@@ -34,6 +34,7 @@ class Robot{
         int HaveTarget = -1;
         int RobotID = -1;
         int RobotMode = 0;
+        int FindStatus = 0;
     public:
         Robot(){}
         int& GetWorkBenchID(){return WorkBenchID;}

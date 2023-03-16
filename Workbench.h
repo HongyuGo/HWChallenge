@@ -36,7 +36,7 @@ class Workbench{
         int& GetProductKind(){return ProductKind;}
         vector<double>& GetAxis(){return Axis;}
         int& GetProductStatus(){return ProductStatus;}
-        bool HaveLock(int CarryType, vector<Robot*>& _Robot);
+        bool HaveLock(int CarryType, vector<Robot*>& _Robot, int ID);
         void ShowWorkBench()const;
         ~Workbench(){};
 
