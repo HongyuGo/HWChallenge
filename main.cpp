@@ -10,8 +10,8 @@ vector<vector<Workbench*>> WorkBenchSelf(10);
 vector<Robot*>RobotVec;
 int Money;
 const double NormalSpeed = 6.0;
-vector<double> RobotSetLineSpeed = {NormalSpeed-0.4,NormalSpeed-0.2,NormalSpeed,NormalSpeed-0.5};
-vector<double> RobotSetAngleSpeed = {2.9,2.8,3.0,2.7};
+vector<double> RobotSetLineSpeed = {NormalSpeed,NormalSpeed,NormalSpeed,NormalSpeed};
+vector<double> RobotSetAngleSpeed = {3.0,3.0,3.0,3.0};
 int GlobalFrameID = 0;
 int time111 = 0;
 
@@ -555,8 +555,10 @@ bool Robot2Robot(Robot* _Robot, vector<Robot*> _RobotVec){
             tmp = _Robot->Axis - _RobotVec[i]->Axis;
             Cpy.insert(pair<double,int>(tmp,i));
         }
-        if(tmp < 3 && _Robot->TypeArticleCarry < _RobotVec[i] -> TypeArticleCarry){
-            return true;
+        if(_Robot->TypeArticleCarry != 0 || _RobotVec[i] -> TypeArticleCarry != 0){
+            if(tmp < 3 && _Robot->TypeArticleCarry < _RobotVec[i] -> TypeArticleCarry){
+                return true;
+            }
         }
     }
     return false;
