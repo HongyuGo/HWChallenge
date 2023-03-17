@@ -124,11 +124,7 @@ int FindMinDistanceTargetWB(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
     double MinDistance = 1e10;
     for(i = 0; i < _WorkBenchVec.size(); i++){
         double DistanceTmp = _axis - _WorkBenchVec[i]->GetAxis();
-        // cerr << _WorkBenchVec[i] -> RobotScheduled << endl;
-        // exit(1);
         if(DistanceTmp < MinDistance && !(_WorkBenchVec[i]->HaveLock(_Robot->TypeArticleCarry, RobotVec, _Robot -> RobotID))){
-        // if(DistanceTmp < MinDistance && _WorkBenchVec[i] -> RobotScheduled == 0){
-            // cerr << "Min test" << endl;
             MinDistance = DistanceTmp;
             MinID= i;
         }
@@ -153,23 +149,8 @@ double CalculateDistance(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
     }
     else    
         MinID = _Robot->HaveTarget;
-
-
-    // double Angle = atan2(YDistance, XDistance);
-    // double AngleDifference = abs(Angle - _Robot->GetTowards());
-    // if(abs(AngleDifference) < 0.5)
-    //     flag = Angle - _Robot->GetTowards() > 0.0 ? 1 : -1; // 1:ni -1 sun;
-    // else    
-    //     flag = 1;
-    // double RealDis =  sqrt(XDistance * XDistance + YDistance * YDistance);
     _Robot->GetWantToCloseWBID() = _WorkBenchVec[MinID]->GetWorkBenchID();
     return CalculateAngleSpeed(_Robot, _WorkBenchVec, MinID);
-    // _Robot->GetRobotWorkBenchDis() = RealDis;
-    // _Robot->GetAngleDifference() = AngleDifference;
-    // double AngleSpeed = AngleDifference > RobotSetAngleSpeed[_Robot->RobotID] ? RobotSetAngleSpeed[_Robot->RobotID] : AngleDifference;
-    // return AngleSpeed * flag;
-
-
 }
 
 double CalculateAngleSpeed(Robot* _Robot, vector<Workbench*>& _WorkBenchVec, int MinID){
@@ -202,32 +183,6 @@ double CalculateAngleSpeed(Robot* _Robot, vector<Workbench*>& _WorkBenchVec, int
 
 
 double Move(Robot* _Robot, int _WorkBenchID, vector<Workbench*>& _WorkBenchVec){
-    // vector<double> _axis = _Robot->GetAxis();
-    // int flag = 0;
-    // double XDistance =  _WorkBenchVec[_WorkBenchID]->GetAxis()[0] - _axis[0];
-    // double YDistance =  _WorkBenchVec[_WorkBenchID]->GetAxis()[1] - _axis[1];
-    // int quadrant = 0;
-    // if(YDistance > 0.0 && XDistance > 0.0)
-    //     quadrant = 1;
-    // else if(YDistance < 0.0 && XDistance > 0.0)
-    //     quadrant = 4;
-    // else if(YDistance > 0.0 && XDistance < 0.0)
-    //     quadrant = 2;
-    // else
-    //     quadrant = 3;
-
-    // double Angle = atan2(YDistance, XDistance);
-    // double AngleDifference = abs(Angle - _Robot->GetTowards());
-    // if(abs(AngleDifference) < 0.5)
-    //     flag = Angle - _Robot->GetTowards() > 0.0 ? 1 : -1; // 1:ni -1 sun;
-    // else    
-    //     flag = 1;
-    // double RealDis =  sqrt(XDistance * XDistance + YDistance * YDistance);
-    // _Robot->GetWantToCloseWBID() = _WorkBenchVec[_WorkBenchID]->GetWorkBenchID();
-    // _Robot->GetRobotWorkBenchDis() = RealDis;
-    // _Robot->GetAngleDifference() = AngleDifference;
-    // double AngleSpeed = AngleDifference > RobotSetAngleSpeed[_Robot->RobotID] ? RobotSetAngleSpeed[_Robot->RobotID] : AngleDifference;
-    // return AngleSpeed * flag;
     return CalculateAngleSpeed(_Robot, _WorkBenchVec, _WorkBenchID);
 }
 
@@ -311,17 +266,13 @@ int main() {
         }
         Order[3] = Order[C - 4];
         Order[3] = Order[C - 4];
-        // cerr << "WorkBench7 : " <<  WorkBench7.size() << endl;
         
         for(i = 0; i < 4; i++){
-            // Buy7(RobotVec[i],WorkBench7);
             if(RobotVec[i] -> RobotMode == 3){
-                // exit(1);
                 Cur[i] = 0;
                 AngleSpeed[i] = Move(RobotVec[i], RobotVec[i]->WantToCloseWBID, WorkBenchVec);              
                 continue;
             }
-            // Buy456(RobotVec[i], WorkBench456);
             FlushProduct(RobotVec[i], WorkBenchVec);
             if(RobotVec[i] -> TypeArticleCarry == 4 || RobotVec[i] -> TypeArticleCarry == 5 || RobotVec[i] -> TypeArticleCarry == 6)
                 RobotVec[i] -> RobotMode = 2;
@@ -332,9 +283,7 @@ int main() {
                 RobotVec[i]->WantTOCloseWBKind = Order[i][Cur[i]];
                 if(All(WorkBenchSelf[Order[i][1]], RobotVec[i]->WantTOCloseWBKind)){
                     swap(Order[i][0], Order[i][2]);
-                    // cerr << "SwapOK" << endl;
                     RobotVec[i]->WantTOCloseWBKind = Order[i][Cur[i]];
-                    // exit(1);
                 }
                 AngleSpeed[i] =  CalculateDistance(RobotVec[i], WorkBenchSelf[RobotVec[i]->WantTOCloseWBKind]);
             }else if(RobotVec[i] -> RobotMode == 1){
@@ -344,29 +293,21 @@ int main() {
             if(RobotVec[i] -> RobotMode == 2){
                 if(WorkBenchSelf[7].size() !=0){
                     Cur[i] = 0;
-                    // cerr << "7 : " << WorkBenchSelf[7].size() << endl;
-                    // cerr << "have target" << RobotVec[i]->HaveTarget << endl;
                     AngleSpeed[i] = CalculateDistance(RobotVec[i], WorkBenchSelf[7]);
                     
                 }
                 else if(WorkBenchSelf[9].size() != 0){
                     Cur[i] = 0;
-                    // cerr << "9 : " << WorkBenchSelf[7].size() << endl;
-                    // cerr << "have target" << RobotVec[i]->HaveTarget << endl;
                     AngleSpeed[i] = CalculateDistance(RobotVec[i], WorkBenchSelf[9]);
                 }
             }
             if(RobotVec[i] -> RobotMode == 4){
                 if(WorkBenchSelf[8].size() != 0){
                     Cur[i] = 0;
-                    // cerr << "9 : " << WorkBenchSelf[7].size() << endl;
-                    // cerr << "have target" << RobotVec[i]->HaveTarget << endl;
                     AngleSpeed[i] = CalculateDistance(RobotVec[i], WorkBenchSelf[8]);
                 }
                 else if(WorkBenchSelf[9].size() != 0){
                     Cur[i] = 0;
-                    // cerr << "9 : " << WorkBenchSelf[7].size() << endl;
-                    // cerr << "have target" << RobotVec[i]->HaveTarget << endl;
                     AngleSpeed[i] = CalculateDistance(RobotVec[i], WorkBenchSelf[9]);
                 }
             }
@@ -586,5 +527,5 @@ void Showyuyue(Workbench* _WorkBench){
 
 
 void ControlLineSpeed(){
-    
+
 }
