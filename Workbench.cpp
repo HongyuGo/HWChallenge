@@ -40,7 +40,7 @@ void WorkBenchMemRelease(const vector<Workbench*>& _WorkBenchVec){
         delete _WorkBenchVec[i];
     }
 } 
-void dec2bin(int _dec, vector<int>& _store){
+void Workbench::dec2bin(int _dec, vector<int>& _store){
     while(_dec > 0){
         if(_dec & 1)
             _store.push_back(1);
@@ -52,7 +52,7 @@ void dec2bin(int _dec, vector<int>& _store){
 void Workbench::ShowWorkBench()const{
     vector<int>ShowBinary;
     int dec = MaterialStatus;
-    dec2bin(dec, ShowBinary);
+    // dec2bin(dec, ShowBinary);
     reverse(ShowBinary.begin(), ShowBinary.end());
     cerr << "WorkBenchID : " << setw(2) << WorkBenchID << " WorkBenchKind : " <<  WorkBenchKind 
          << " axisx : " << setw(5) << Axis[0] << " axisy : "  << setw(5) << Axis[1]  << " ProductStatus : " << ProductStatus << " MaterialStatus : ";

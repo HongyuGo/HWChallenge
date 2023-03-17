@@ -25,6 +25,7 @@ class Workbench{
         int SellingPrice;
         int ProductStatus= 0;//1:have, 0:not have
         vector<int> RobotScheduled;
+        vector<int> LookMaterial;
     public:
         Workbench(char _WorkBenchKind, const vector<double>& _axis, int _WorkBenchID);
         int& GetWorkBenchKind(){return WorkBenchKind;}
@@ -38,6 +39,8 @@ class Workbench{
         int& GetProductStatus(){return ProductStatus;}
         bool HaveLock(int CarryType, vector<Robot*>& _Robot, int ID);
         bool CheckLock(vector<Robot*> &_Robot, int CarryType, int ID);
+        void dec2bin(int _dec, vector<int>& _store);
+        // bool CheckLock(vector<Robot*>& _Robot, int CarryType, int ID);       
         void ShowWorkBench()const;
         ~Workbench(){};
 

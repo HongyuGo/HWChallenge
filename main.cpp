@@ -14,20 +14,23 @@ vector<double> RobotSetLineSpeed = {NormalSpeed,NormalSpeed,NormalSpeed,NormalSp
 vector<double> RobotSetAngleSpeed = {3.0,3.0,3.0,3.0};
 int GlobalFrameID = 0;
 int time111 = 0;
+int timeswap = 0;
 
 // char map[MAPLEN][MAPLEN];
 double CalculateAngleSpeed(Robot* _Robot, vector<Workbench*>& _WorkBenchVec, int MinID);
-bool Buy456(Robot* _Robot, vector<Workbench*>& _WorkBench456);
+// bool Buy456(Robot* _Robot, vector<Workbench*>& _WorkBench456);
 bool Buy7(Robot* _Robot, vector<Workbench*>& _WorkBench7);
 void ShowRobotInfo(vector<Robot*>& _RobotVec);
 void FlushProduct(Robot* _Robot, vector<Workbench*>& _WorkBenchVec);
-bool All(vector<Workbench*>& _WorkBenchVec, int Type);
+bool All(vector<Workbench*>& _WorkBenchVec, int Type, Robot* _Robot);
 bool All7(vector<Workbench*>& _WorkBenchVec, int Type, int* CheckID, int RobotID);
 bool IsBuy(int Kind, vector<vector<Workbench*>>& _WorkBenchSellSelf);
 double RobotCloseWorkBench(Robot* _Robot, vector<Workbench*>& _WorkBenchVec);
 double RobotCloseWall(Robot* _Robot);
 void Showyuyue(Workbench* _WorkBench);
 bool Robot2Robot(Robot* _Robot, vector<Robot*> _RobotVec);
+void Buy456(Robot* _Robot, vector<Workbench*>& _WorkBench456);
+bool Loss7(Workbench * _WorkBench, int Type);
 int start = 0;
 bool MapInit() {
     char line[1024];
@@ -80,6 +83,7 @@ bool ReadInfo(int _WorkBenchNum, vector<Workbench*>& _WorkBenchVec, vector<Robot
         cin >> _axis[0] >> _axis[1];
         _WorkBenchVec[i] -> GetAxis() = _axis;
         cin >> _WorkBenchVec[i] -> GetRestWorkTime() >> _WorkBenchVec[i] -> GetMaterialStatus() >> _WorkBenchVec[i] -> GetProductStatus();
+        _WorkBenchVec[i]->dec2bin(_WorkBenchVec[i]->MaterialStatus, _WorkBenchVec[i]->LookMaterial);
         #if (SHOW == 1)
             _WorkBenchVec[i] -> ShowWorkBench();
         #endif
@@ -120,6 +124,38 @@ ostream& operator<<(ostream& os, const vector<double> _axis){
     os << "_axisX : " << _axis[0] << "_axisY : " << _axis[1];
     return os;
 }
+
+// int FindMinDistanceTargetWB(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
+//     int i;
+//     int Type = _Robot->TypeArticleCarry;
+//     auto cmp = [Type, _Robot](Workbench *a1, Workbench* b1){
+//         if(count(a1->LookMaterial.begin(),a1->LookMaterial.end(), 1) > count(b1->LookMaterial.begin(),b1->LookMaterial.end(),1)){
+//             return true;
+//         }else if(count(a1->LookMaterial.begin(),a1->LookMaterial.end(),1) == count(b1->LookMaterial.begin(),b1->LookMaterial.end(),1)){
+//             if(abs(a1 -> RestWorkTime) < abs(b1 -> RestWorkTime)){
+//                 return true;
+//             }else if(abs(a1->RestWorkTime) == abs(b1->RestWorkTime)){
+//                 if(a1->Axis - _Robot->Axis < b1->Axis - _Robot->Axis){
+//                     return true;
+//                 }else{
+//                     return false;
+//                 }
+//             }else{
+//                 return false;
+//             }
+//         }else{
+//             return false;
+//         }
+//     };
+//     map<Workbench*,int,decltype(cmp)> Order(cmp);
+//     for(i = 0; i < _WorkBenchVec.size(); i++){
+//         if(!_WorkBenchVec[i]->HaveLock(_Robot->TypeArticleCarry, RobotVec, _Robot -> RobotID)){
+//             Order.insert(pair<Workbench*,int>(_WorkBenchVec[i],i));
+//         }
+//     }
+//     return Order.begin()->second;
+// }
+
 int FindMinDistanceTargetWB(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
     int i;
     int MinID = _WorkBenchVec.size() + 1;
@@ -185,10 +221,10 @@ double CalculateAngleSpeed(Robot* _Robot, vector<Workbench*>& _WorkBenchVec, int
         _Robot->AngleFrameID = GlobalFrameID;
     }
     if(_Robot->AngleFrameIDFlag == 1 && GlobalFrameID - _Robot->AngleFrameID < 40 && GlobalFrameID > 200){
-        cerr << _Robot->Towards << endl;
+        // cerr << _Robot->Towards << endl;
         AngleDifference = abs(_Robot->Towards) + PI / 2.0;
         flag = -1;
-        cerr << AngleDifference << endl;
+        // cerr << AngleDifference << endl;
         time111++;
     }else{
         _Robot->AngleFrameIDFlag = 0;
@@ -213,9 +249,9 @@ int main() {
     int i;
     const int Ordernum = 4;
     vector<int> Order0 = {1, 4, 2, 4};
-    vector<int> Order1 = {1, 5, 3, 5};
+    vector<int> Order1 = {3, 5, 1, 5};
     vector<int> Order2 = {2, 6, 3, 6};
-    vector<int> Order3 = {2, 6, 3, 6};
+    vector<int> Order3 = {3, 6, 2, 6};
     vector<int> Cur(4,0);
     vector<double> AngleSpeed(4, 0.0);
     vector<vector<int>>Order;
@@ -245,54 +281,64 @@ int main() {
             if(WorkBenchVec[i] -> ProductStatus == 1 && WorkBenchVec[i] -> WorkBenchKind == 7){
                 WorkBench7.push_back(WorkBenchVec[i]);
             }
-            // if(WorkBenchVec[i] -> ProductStatus == 1 && WorkBenchVec[i] -> WorkBenchKind == 6 && WorkBenchVec[i] -> RobotScheduled == -1 && !All7(WorkBenchSelf[7], 6, &CheckID)){
-            //     if(CheckID == i){
-            //     count6++;
-            //     WorkBench6.push_back(WorkBenchVec[i]);
-            //     WorkBench456.push_back(WorkBenchVec[i]);
-            //     }
-            // }
-            // if(WorkBenchVec[i] -> ProductStatus == 1 && WorkBenchVec[i] -> WorkBenchKind == 5 && WorkBenchVec[i] -> RobotScheduled == -1 && !All7(WorkBenchSelf[7], 5, &CheckID)){
-            //     if(CheckID == i){
-            //     count5++;
-            //     WorkBench5.push_back(WorkBenchVec[i]);
-            //     WorkBench456.push_back(WorkBenchVec[i]);
-            //     }
-            // }
-            // if(WorkBenchVec[i] -> ProductStatus == 1 && WorkBenchVec[i] -> WorkBenchKind == 4 && WorkBenchVec[i] -> RobotScheduled == -1 && !All7(WorkBenchSelf[7], 4, &CheckID)){
-            //     if(CheckID == i){
-            //     count4++;
-            //     WorkBench4.push_back(WorkBenchVec[i]);
-            //     WorkBench456.push_back(WorkBenchVec[i]);
-            //     }
-            // }
+            if(WorkBenchVec[i] -> ProductStatus == 1 && WorkBenchVec[i] -> WorkBenchKind == 6 && WorkBenchVec[i] -> RobotScheduled.empty() ){
+                count6++;
+                if(Loss7(WorkBenchVec[i],6)){
+                    WorkBench6.push_back(WorkBenchVec[i]);
+                    WorkBench456.push_back(WorkBenchVec[i]);
+                }
+            }
+            if(WorkBenchVec[i] -> ProductStatus == 1 && WorkBenchVec[i] -> WorkBenchKind == 5 && WorkBenchVec[i] -> RobotScheduled.empty() ){
+                count5++;
+                if(Loss7(WorkBenchVec[i],5)){
+                    WorkBench5.push_back(WorkBenchVec[i]);
+                    WorkBench456.push_back(WorkBenchVec[i]);
+                }
+            }
+            if(WorkBenchVec[i] -> ProductStatus == 1 && WorkBenchVec[i] -> WorkBenchKind == 4 && WorkBenchVec[i] -> RobotScheduled.empty() ){
+                count4++;
+                if(Loss7(WorkBenchVec[i],4)){
+                    WorkBench4.push_back(WorkBenchVec[i]);
+                    WorkBench456.push_back(WorkBenchVec[i]);
+                }
+            }
         }
-        WorkBenchSellSelf[4] = WorkBench4;
-        WorkBenchSellSelf[5] =WorkBench5;
-        WorkBenchSellSelf[6] = WorkBench6;
-        int C = 0;
-        if(count4 <= count5){
-            if(count4 <= count6)
-                C = 4;
-            else    
-                C = 6;
-        }
-        else{
-            if(count5 <= count6)
-                C = 5;
-            else
-                C = 6;
-        }
-        Order[3] = Order[C - 4];
-        Order[3] = Order[C - 4];
-        
+        cerr << "6 : " << count6 << " 5 : " << count5 << " 4 : " <<count4 << endl;
+        map<int, int>Find456Min;
+        Find456Min.insert(pair<int,int>(count6,6));
+        Find456Min.insert(pair<int,int>(count5,5));
+        Find456Min.insert(pair<int,int>(count4,4));
+        // WorkBenchSellSelf[4] = WorkBench4;
+        // WorkBenchSellSelf[5] =WorkBench5;
+        // WorkBenchSellSelf[6] = WorkBench6;
+        // int C = 0;
+        // if(count4 <= count5){
+        //     if(count4 <= count6)
+        //         C = 4;
+        //     else    
+        //         C = 6;
+        // }
+        // else{
+        //     if(count5 <= count6)
+        //         C = 5;
+        //     else
+        //         C = 6;
+        // }
+        // int C = Find456Min.begin()->second;
+        // Order[3][1] = C;
+        // Order[3][3] = C;
+        // Order[3][0] = Order[C - 4][2];
+        // Order[3][2] = Order[C - 4][0];
+        // cerr << "C" << C << endl;
+        // cerr << "timeswap" << timeswap << endl;
         for(i = 0; i < 4; i++){
+            // Buy456(RobotVec[i], WorkBench456);
             if(RobotVec[i] -> RobotMode == 3){
                 Cur[i] = 0;
                 AngleSpeed[i] = Move(RobotVec[i], RobotVec[i]->WantToCloseWBID, WorkBenchVec);              
                 continue;
             }
-            FlushProduct(RobotVec[i], WorkBenchVec);
+            // FlushProduct(RobotVec[i], WorkBenchVec);
             if(RobotVec[i] -> TypeArticleCarry == 4 || RobotVec[i] -> TypeArticleCarry == 5 || RobotVec[i] -> TypeArticleCarry == 6)
                 RobotVec[i] -> RobotMode = 2;
             if(RobotVec[i] -> TypeArticleCarry == 7){
@@ -300,10 +346,11 @@ int main() {
             }
             if(RobotVec[i] -> RobotMode == 0){
                 RobotVec[i]->WantTOCloseWBKind = Order[i][Cur[i]];
-                if(All(WorkBenchSelf[Order[i][1]], RobotVec[i]->WantTOCloseWBKind)){
-                    swap(Order[i][0], Order[i][2]);
-                    RobotVec[i]->WantTOCloseWBKind = Order[i][Cur[i]];
-                }
+                // if(All(WorkBenchSelf[Order[i][1]], RobotVec[i]->WantTOCloseWBKind, RobotVec[i]) && RobotVec[i]->DoOnce == 0 || RobotVec[i] ->DoOnce == 2){
+                //     timeswap++;
+                //     swap(Order[i][0], Order[i][2]);
+                //     RobotVec[i]->WantTOCloseWBKind = Order[i][Cur[i]];
+                // }
                 AngleSpeed[i] =  CalculateDistance(RobotVec[i], WorkBenchSelf[RobotVec[i]->WantTOCloseWBKind]);
             }else if(RobotVec[i] -> RobotMode == 1){
                 Cur[i] = 0;
@@ -332,11 +379,11 @@ int main() {
             }
         }
 
-        // ShowRobotInfo(RobotVec);
+        ShowRobotInfo(RobotVec);
         // Showyuyue(WorkBenchVec[16]);
         // Showyuyue(WorkBenchVec[14]);
         // Showyuyue(WorkBenchVec[0]);
-        cerr << "time" << time111 << endl;
+        // cerr << "time" << time111 << endl;
         printf("%d\n", frameID);
         for(i = 0; i < 4; i++){
             if(abs(AngleSpeed[i]) < 0.2){
@@ -349,6 +396,7 @@ int main() {
                     LineSpeed[i] = RobotSetLineSpeed[i] - 3;
                 }
             }
+            cerr << "AngleSpeed" << endl;
             cerr << AngleSpeed[i] << ' ' << endl;
         }
         for(int robotId = 0; robotId < 4; robotId++){
@@ -400,24 +448,24 @@ int main() {
 }
 
 
-bool Buy456(Robot* _Robot, vector<Workbench*>& _WorkBench456){
-    if(_Robot -> TypeArticleCarry != 0){
-        return false;
-    }
-    if(_WorkBench456.empty()){
-        return false;
-    }
-    if(_Robot -> RobotMode != 0){
-        return false;
-    }
-    int MinID456 = FindMinDistanceTargetWB(_Robot, _WorkBench456);
-    // if(_WorkBench456[MinID456] -> RobotScheduled != -1)
-    //     return false;
-    _Robot -> WantToCloseWBID = _WorkBench456[MinID456] -> WorkBenchID;
-    _WorkBench456.erase(_WorkBench456.begin() + MinID456);
-    _Robot -> RobotMode = 1;
-    return true;
-}
+// bool Buy456(Robot* _Robot, vector<Workbench*>& _WorkBench456){
+//     if(_Robot -> TypeArticleCarry != 0){
+//         return false;
+//     }
+//     if(_WorkBench456.empty()){
+//         return false;
+//     }
+//     if(_Robot -> RobotMode != 0){
+//         return false;
+//     }
+//     int MinID456 = FindMinDistanceTargetWB(_Robot, _WorkBench456);
+//     // if(_WorkBench456[MinID456] -> RobotScheduled != -1)
+//     //     return false;
+//     _Robot -> WantToCloseWBID = _WorkBench456[MinID456] -> WorkBenchID;
+//     _WorkBench456.erase(_WorkBench456.begin() + MinID456);
+//     _Robot -> RobotMode = 1;
+//     return true;
+// }
 bool Buy7(Robot* _Robot, vector<Workbench*>& _WorkBench7){
     if(_Robot -> TypeArticleCarry != 0){
         return false;
@@ -463,16 +511,17 @@ void ShowRobotInfo(vector<Robot*>& _RobotVec){
 }
 
 void FlushProduct(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
+    if(_Robot -> RobotID != 3)
+        return;
     if(_Robot->RobotMode == 0)
         return;
-        
-    // if(_WorkBenchVec[_Robot -> WantToCloseWBID] -> ProductStatus == 0){
-    //     _Robot->HaveTarget = -1;
-    //     _Robot->RobotMode = 0;
-    // }
+    if(_WorkBenchVec[_Robot -> WantToCloseWBID] -> ProductStatus == 0){
+        _Robot->HaveTarget = -1;
+        _Robot->RobotMode = 0;
+    }
 }
 
-bool All(vector<Workbench*>& _WorkBenchVec, int Type){
+bool All(vector<Workbench*>& _WorkBenchVec, int Type, Robot* _Robot){
     int i;
     // cerr << "WorkBenchvec[0]kind" << _WorkBenchVec[0] -> WorkBenchKind << endl;
     if(_WorkBenchVec[0] -> WorkBenchKind == 1 || _WorkBenchVec[0] -> WorkBenchKind == 2 || _WorkBenchVec[0] -> WorkBenchKind == 3)
@@ -483,6 +532,7 @@ bool All(vector<Workbench*>& _WorkBenchVec, int Type){
             return false;
         }
     }
+    _Robot->DoOnce++;
     return true;
 }
 
@@ -560,6 +610,30 @@ bool Robot2Robot(Robot* _Robot, vector<Robot*> _RobotVec){
                 return true;
             }
         }
+    }
+    return false;
+}
+
+void Buy456(Robot* _Robot, vector<Workbench*>& _WorkBench456){
+    if(_Robot->RobotID != 3)
+        return;
+    if(_Robot->RobotMode != 0)
+        return;
+    if(_WorkBench456.empty())
+        return;
+    int MinID456 = FindMinDistanceTargetWB(_Robot, _WorkBench456);
+    _WorkBench456.erase(_WorkBench456.begin() + MinID456);
+    _Robot->RobotMode  = 1;
+    _Robot->WantToCloseWBID = _WorkBench456[MinID456]->WorkBenchID;
+    timeswap++;
+}
+
+bool Loss7(Workbench * _WorkBench, int Type){
+    int i;
+    for(i = 0; i < WorkBenchSelf[7].size(); i++){
+        if(_WorkBench->MaterialStatus & (1 << Type) == 0){
+            return true;
+        } 
     }
     return false;
 }
