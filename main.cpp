@@ -376,8 +376,9 @@ int main() {
         }
 
         ShowRobotInfo(RobotVec);
-        Showyuyue(WorkBenchVec[16]);
-        Showyuyue(WorkBenchVec[14]);
+        // Showyuyue(WorkBenchVec[16]);
+        // Showyuyue(WorkBenchVec[14]);
+        Showyuyue(WorkBenchVec[0]);
         if(RobotVec[1]->RobotMode == 3)
             exit(1);
         // cerr << "WorkBench22 " << WorkBenchVec[22] -> MaterialStatus << endl;
@@ -549,18 +550,28 @@ bool All7(vector<Workbench*>& _WorkBenchVec, int Type, int *CheckID, int RobotID
         return false;
     // cerr << "WorkBenchvec[0]kind" << _WorkBenchVec[0] -> WorkBenchKind << endl;
     // if(_WorkBenchVec[0] -> WorkBenchKind == 1 || _WorkBenchVec[0] -> WorkBenchKind == 2 || _WorkBenchVec[0] -> WorkBenchKind == 3)    
-    if(Type == 1 || Type == 2 || Type == 3)
+    cerr << "Type" << Type << endl;
+    if(Type == 1 || Type == 2 || Type == 3 || Type == 7)
         return false;
     for(i = 0; i < _WorkBenchVec.size(); i++){
         if((_WorkBenchVec[i]-> MaterialStatus & (1 << Type)) == 0){//检查所有的7号工作台，如果有一个工作台对应456没满，则可以购买456
-            // if(_WorkBenchVec[i]->RobotScheduled == -1){
+            cerr<< "jinru" << endl;
             if(_WorkBenchVec[i]->RobotScheduled.empty()){
-                // *CheckID = _WorkBenchVec[i]->WorkBenchID;
+                cerr << "return empty" << endl;
                 return false;
-            }else if(_WorkBenchVec[i]->CheckLock(RobotVec,Type,RobotID)){
+            }
+            cerr << "RobotCarry" <<endl;
+            cerr << RobotVec[0] ->TypeArticleCarry << ' ' << RobotVec[1] ->TypeArticleCarry << ' ' <<  RobotVec[2] ->TypeArticleCarry << ' ' <<  RobotVec[3] ->TypeArticleCarry << endl;
+            cerr << "empty" << _WorkBenchVec[i]->RobotScheduled.empty() << "RobotID: " << RobotID << endl;
+            if(RobotVec[3] -> TypeArticleCarry == 4 && RobotVec[0] -> TypeArticleCarry == 4)
+                exit(1);
+            if(_WorkBenchVec[i]->CheckLock(RobotVec,Type,RobotID)){
+                // exit(1);
                 return true;
             }else{
-                // *CheckID = _WorkBenchVec[i]->WorkBenchID;
+                cerr << "return else" << endl;
+                // if(RobotVec[3] -> TypeArticleCarry == 4)
+                    // exit(1);
                 return false;
             }
         }
@@ -578,7 +589,7 @@ bool IsBuy(int Kind, vector<vector<Workbench*>>& _WorkBenchSellSelf){
 }
 
 double RobotCloseWorkBench(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
-    if(abs(_Robot->Axis - WorkBenchVec[_Robot->WantToCloseWBID]->Axis) < 0.4 && _Robot->TypeArticleCarry != -1){
+    if(abs(_Robot->Axis - WorkBenchVec[_Robot->WantToCloseWBID]->Axis) < 0.4 && _Robot->TypeArticleCarry != 0){
         return -1.0;
     }
     return 1.0;
@@ -598,5 +609,8 @@ void Showyuyue(Workbench* _WorkBench){
     for(int tmp: _WorkBench->RobotScheduled){
         cerr << tmp << ' ';
     }
+    cerr << endl;
+    cerr << "WorkBenchyuyue"<< _WorkBench->WorkBenchID << " Kind : " << _WorkBench->ProductKind << endl;
+    cerr << _WorkBench->MaterialStatus << endl;
     cerr << endl;
 }

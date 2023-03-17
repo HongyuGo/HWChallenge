@@ -67,8 +67,11 @@ bool Workbench::CheckLock(vector<Robot*>& _Robot, int CarryType, int ID){
     if(RobotScheduled.empty())//没有预约工作台的机器人，不用锁
         return false;
     for(int tmp : RobotScheduled){
+        cerr << "tmp " << tmp << endl;
+        cerr <<  "zuotyp" << _Robot[tmp]->TypeArticleCarry << " you " << CarryType  << " ID "<< ID <<endl;
         if(_Robot[tmp]->TypeArticleCarry == CarryType && tmp != ID){//检查预约了工作台的所有机器人，是否与输入的机器人携带的材料一至， 如果有一个一样，那么锁了
-            true;
+            cerr << "ru" <<endl;
+            return true;
         }
     }
     return false;
