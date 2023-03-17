@@ -132,11 +132,8 @@ int FindMinDistanceTargetWB(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
             MinID= i;
         }
     }
-    // cerr << "MinID" << MinID << endl;
-    // exit(1);
     _Robot->FindStatus = 0;
     if(MinID == _WorkBenchVec.size() + 1){
-        // exit(1);
         _Robot->FindStatus = 1;
         MinID = _WorkBenchVec.size() - 1;
     }
@@ -144,9 +141,6 @@ int FindMinDistanceTargetWB(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
         if(_Robot->FindStatus == 0)
             _WorkBenchVec[MinID] -> RobotScheduled.push_back(_Robot->RobotID);
     }
-    // if(_WorkBenchVec[MinID] -> RobotScheduled == -1)
-    // cerr << "MinID " << MinID << endl;
-    // cerr << "TargetWB " << _WorkBenchVec[MinID]->WorkBenchID << endl;
     return MinID;
 }
 double CalculateDistance(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
@@ -162,11 +156,6 @@ double CalculateDistance(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
     }
     else    
         MinID = _Robot->HaveTarget;
-    // cerr << "MinID" << MinID << endl;
-    // cerr << "teststetstes" << endl;
-        // _Robot->HaveTargetWBFlag = 1;
-    // }
-    // cerr << "MInID : " << MinID << endl;
     int flag = 0;
     double XDistance =  _WorkBenchVec[MinID]->GetAxis()[0] - _axis[0];
     double YDistance =  _WorkBenchVec[MinID]->GetAxis()[1] - _axis[1];
@@ -181,7 +170,6 @@ double CalculateDistance(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
         quadrant = 3;
 
     double Angle = atan2(YDistance, XDistance);
-    // cerr << "Angle" << Angle << endl;
     double AngleDifference = abs(Angle - _Robot->GetTowards());
     if(abs(AngleDifference) < 0.5)
         flag = Angle - _Robot->GetTowards() > 0.0 ? 1 : -1; // 1:ni -1 sun;
@@ -192,8 +180,6 @@ double CalculateDistance(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
     _Robot->GetRobotWorkBenchDis() = RealDis;
     _Robot->GetAngleDifference() = AngleDifference;
     double AngleSpeed = AngleDifference > RobotSetAngleSpeed[_Robot->RobotID] ? RobotSetAngleSpeed[_Robot->RobotID] : AngleDifference;
-    // cerr << "AngleSpeed" << AngleSpeed << endl;
-    // cerr << "enenene " << endl;
     return AngleSpeed * flag;
 }
 double Move(Robot* _Robot, int _WorkBenchID, vector<Workbench*>& _WorkBenchVec){
@@ -212,7 +198,6 @@ double Move(Robot* _Robot, int _WorkBenchID, vector<Workbench*>& _WorkBenchVec){
         quadrant = 3;
 
     double Angle = atan2(YDistance, XDistance);
-    // cerr << "Angle" << Angle << endl;
     double AngleDifference = abs(Angle - _Robot->GetTowards());
     if(abs(AngleDifference) < 0.5)
         flag = Angle - _Robot->GetTowards() > 0.0 ? 1 : -1; // 1:ni -1 sun;
@@ -223,15 +208,10 @@ double Move(Robot* _Robot, int _WorkBenchID, vector<Workbench*>& _WorkBenchVec){
     _Robot->GetRobotWorkBenchDis() = RealDis;
     _Robot->GetAngleDifference() = AngleDifference;
     double AngleSpeed = AngleDifference > RobotSetAngleSpeed[_Robot->RobotID] ? RobotSetAngleSpeed[_Robot->RobotID] : AngleDifference;
-    // cerr << "AngleSpeed" << AngleSpeed << endl;
-    // cerr << "enenene " << endl;
     return AngleSpeed * flag;
 }
 
 int main() {
-    // vector<double> ve1(2,1.0);
-    // vector<double> ve2(2,2.0);
-    // cout << ve1 - ve2 <<endl;
     MapInit();
     puts("OK");
     fflush(stdout);
@@ -243,9 +223,6 @@ int main() {
     vector<int> Order1 = {1, 5, 3, 5};
     vector<int> Order2 = {2, 6, 3, 6};
     vector<int> Order3 = {2, 6, 3, 6};
-
-
-
     vector<int> Cur(4,0);
     vector<double> AngleSpeed(4, 0.0);
     vector<vector<int>>Order;
@@ -383,8 +360,6 @@ int main() {
             if(RobotVec[i] -> RobotMode == 3)
                 exit(1);
         }
-        // cerr << "WorkBench22 " << WorkBenchVec[22] -> MaterialStatus << endl;
-        // cerr << "WorkBench6" << WorkBenchSelf[6][1]->MaterialStatus << endl;
         printf("%d\n", frameID);
         for(i = 0; i < 4; i++){
             if(abs(AngleSpeed[i]) < 0.2){
@@ -394,21 +369,14 @@ int main() {
             else
                 LineSpeed[i] = RobotCloseWorkBench(RobotVec[i], WorkBenchVec);
         }
-        // cerr << "Speed" <<LineSpeed[0]<< endl;
         for(int robotId = 0; robotId < 4; robotId++){
             printf("forward %d %lf\n", robotId, LineSpeed[robotId]);
-            // cerr << "robotId " << robotId << " Linespeed : " <<   LineSpeed[robotId] << endl;
             printf("rotate %d %f\n", robotId, AngleSpeed[robotId]);
-            // cerr << "robotId " << robotId << " AngleSpeed : " <<  AngleSpeed[robotId] << endl;
             int BuySellFlag = 0;
             if(RobotVec[robotId]->GetWorkBenchID() == RobotVec[robotId]->GetWantToCloseWBID() && RobotVec[robotId]->TypeArticleCarry != 0){
                 cout << "sell " << robotId << endl;
                 fflush(stdout);
                 RobotVec[robotId] -> TypeArticleCarry = 0;
-                // Cur[robotId] = (++Cur[robotId] % 4);
-                // RobotVec[robotId]->WantTOCloseWBKind = Order[robotId][Cur[robotId]];
-                // WorkBenchVec[RobotVec[robotId]->WorkBenchID] -> RobotScheduled = -1;
-                // RobotVec[robotId] -> HaveTarget = -1;
                 BuySellFlag = 1;
             }
             if(RobotVec[robotId]->GetWorkBenchID() == RobotVec[robotId]->GetWantToCloseWBID() && RobotVec[robotId]->TypeArticleCarry == 0){
@@ -425,17 +393,9 @@ int main() {
                             fflush(stdout);
                             BuySellFlag = 1;
                             int ID = RobotVec[robotId]->WorkBenchID;
-                            // WorkBenchVec[RobotVec[robotId]->GetWorkBenchID()]->RobotScheduled.clear();
                         }
                     }
-                    // if(find_if(WorkBench456.begin(), WorkBench456.end(),[ID](Workbench* work){return work->WorkBenchID == ID;}) != WorkBench456.end()){
-                    //     WorkBench456.erase(WorkBench456.begin() + ID);
-                    // }
                 }
-                // Cur[robotId] = (++Cur[robotId] % 4);
-                // RobotVec[robotId]->WantTOCloseWBKind = Order[robotId][Cur[robotId]];
-                // WorkBenchVec[RobotVec[robotId]->WorkBenchID] -> RobotScheduled = -1;
-                // RobotVec[robotId] -> HaveTarget = -1;
             }
             if(BuySellFlag == 1){
                 if(RobotVec[robotId]->RobotMode == 0){
@@ -446,7 +406,6 @@ int main() {
                 vector<int>& Erase = (WorkBenchVec[RobotVec[robotId]->WorkBenchID] -> RobotScheduled);
                 if(find(Erase.begin(), Erase.end(), robotId) != Erase.end())
                     Erase.erase(find(Erase.begin(), Erase.end(), robotId));
-                // WorkBenchVec[RobotVec[robotId]->WorkBenchID] -> RobotScheduled = -1;
                 RobotVec[robotId] -> HaveTarget = -1;
             }
         }
