@@ -3,7 +3,7 @@
 #include <cstring>
 #include "Params.h"
 #define MAPLEN (100)
-string map[MAPLEN];
+string mapInit[MAPLEN];
 vector<int> WorkBenchNum(10,0);
 vector<Workbench*>WorkBenchVec;
 vector<vector<Workbench*>> WorkBenchSelf(10);
@@ -12,6 +12,8 @@ int Money;
 const double NormalSpeed = 6.0;
 vector<double> RobotSetLineSpeed = {NormalSpeed-0.4,NormalSpeed-0.2,NormalSpeed,NormalSpeed-0.5};
 vector<double> RobotSetAngleSpeed = {2.9,2.8,3.0,2.7};
+int GlobalFrameID = 0;
+int time111 = 0;
 
 // char map[MAPLEN][MAPLEN];
 double CalculateAngleSpeed(Robot* _Robot, vector<Workbench*>& _WorkBenchVec, int MinID);
@@ -25,6 +27,7 @@ bool IsBuy(int Kind, vector<vector<Workbench*>>& _WorkBenchSellSelf);
 double RobotCloseWorkBench(Robot* _Robot, vector<Workbench*>& _WorkBenchVec);
 double RobotCloseWall(Robot* _Robot);
 void Showyuyue(Workbench* _WorkBench);
+bool Robot2Robot(Robot* _Robot, vector<Robot*> _RobotVec);
 int start = 0;
 bool MapInit() {
     char line[1024];
@@ -43,10 +46,10 @@ bool MapInit() {
             }
             return true;
         }
-        map[i] = line;
+        mapInit[i] = line;
         // cerr << map[i] << endl;
         // exit(1);
-        WorkBenchAndRobotRead(map[i], WorkBenchVec, RobotVec, i); 
+        WorkBenchAndRobotRead(mapInit[i], WorkBenchVec, RobotVec, i); 
         i++;//iterative updates
     }
     cerr << "An error occurred with the readUntilOK function." << endl;
@@ -177,6 +180,21 @@ double CalculateAngleSpeed(Robot* _Robot, vector<Workbench*>& _WorkBenchVec, int
     if(abs(AngleDifference) >= 0.4){
         AngleDifference = RobotSetAngleSpeed[_Robot->RobotID];
     }
+    if(Robot2Robot(_Robot, RobotVec)){
+        _Robot->AngleFrameIDFlag = 1;
+        _Robot->AngleFrameID = GlobalFrameID;
+    }
+    if(_Robot->AngleFrameIDFlag == 1 && GlobalFrameID - _Robot->AngleFrameID < 40 && GlobalFrameID > 200){
+        cerr << _Robot->Towards << endl;
+        AngleDifference = abs(_Robot->Towards) + PI / 2.0;
+        flag = -1;
+        cerr << AngleDifference << endl;
+        time111++;
+    }else{
+        _Robot->AngleFrameIDFlag = 0;
+    }
+    if(abs(Angle) > 3.0 && abs(_Robot->Towards) > 3)
+        flag = 0;
     double AngleSpeed = AngleDifference;
     return AngleSpeed * flag;
 }
@@ -207,6 +225,7 @@ int main() {
     Order.push_back(Order3);
     vector<double> LineSpeed(4,0.0);
     while (scanf("%d", &frameID) != EOF) {
+        GlobalFrameID = frameID;
         cin >> Money;
         cin >> WorkBenchNum;
         // cerr << "frameID " << frameID << " Money " << Money <<" WorkBenchNum " << WorkBenchNum << endl;
@@ -317,18 +336,20 @@ int main() {
         // Showyuyue(WorkBenchVec[16]);
         // Showyuyue(WorkBenchVec[14]);
         // Showyuyue(WorkBenchVec[0]);
-        for(i = 0; i < 4; i++){
-            if(RobotVec[i] -> RobotMode == 3)
-                exit(1);
-        }
+        cerr << "time" << time111 << endl;
         printf("%d\n", frameID);
         for(i = 0; i < 4; i++){
             if(abs(AngleSpeed[i]) < 0.2){
                 LineSpeed[i] = RobotSetLineSpeed[i];
                 LineSpeed[i] = RobotCloseWall(RobotVec[i]);
             }
-            else
+            else{
                 LineSpeed[i] = RobotCloseWorkBench(RobotVec[i], WorkBenchVec);
+                if(RobotVec[i]->AngleFrameIDFlag == 1){
+                    LineSpeed[i] = RobotSetLineSpeed[i] - 3;
+                }
+            }
+            cerr << AngleSpeed[i] << ' ' << endl;
         }
         for(int robotId = 0; robotId < 4; robotId++){
             printf("forward %d %lf\n", robotId, LineSpeed[robotId]);
@@ -465,7 +486,6 @@ bool All(vector<Workbench*>& _WorkBenchVec, int Type){
     return true;
 }
 
-
 bool All7(vector<Workbench*>& _WorkBenchVec, int Type, int *CheckID, int RobotID){
     int i;
     if(_WorkBenchVec.empty())
@@ -488,7 +508,6 @@ bool All7(vector<Workbench*>& _WorkBenchVec, int Type, int *CheckID, int RobotID
     }
     return true;
 }
-
 
 bool IsBuy(int Kind, vector<vector<Workbench*>>& _WorkBenchSellSelf){
     if(Kind == 1 || Kind == 2 || Kind == 3)
@@ -525,7 +544,20 @@ void Showyuyue(Workbench* _WorkBench){
     cerr << endl;
 }
 
-
-void ControlLineSpeed(){
-
+bool Robot2Robot(Robot* _Robot, vector<Robot*> _RobotVec){
+    if(_Robot->AngleFrameIDFlag == 1)
+        return false;
+    map<double, int> Cpy;
+    int i;
+    double tmp = 1e10;
+    for(i = 0; i < 4; i++){
+        if(i != _Robot->RobotID){
+            tmp = _Robot->Axis - _RobotVec[i]->Axis;
+            Cpy.insert(pair<double,int>(tmp,i));
+        }
+        if(tmp < 3 && _Robot->TypeArticleCarry < _RobotVec[i] -> TypeArticleCarry){
+            return true;
+        }
+    }
+    return false;
 }

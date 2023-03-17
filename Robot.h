@@ -35,6 +35,8 @@ class Robot{
         int RobotID = -1;
         int RobotMode = 0;
         int FindStatus = 0;
+        int AngleFrameID = 0;
+        int AngleFrameIDFlag = 0;
     public:
         Robot(){}
         int& GetWorkBenchID(){return WorkBenchID;}

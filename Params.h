@@ -7,6 +7,7 @@
 #include <iostream>
 #include <cmath>
 #include <algorithm>
+#include <map>
 using namespace std;
 #define SHOW (0)
 extern int IDCount;
