@@ -11,9 +11,10 @@ vector<Robot*>RobotVec;
 int Money;
 const double NormalSpeed = 6.0;
 vector<double> RobotSetLineSpeed = {NormalSpeed-0.4,NormalSpeed-0.2,NormalSpeed,NormalSpeed-0.5};
-vector<double> RobotSetAngleSpeed = {3.0,3.0,3.0,3.0};
+vector<double> RobotSetAngleSpeed = {2.9,2.8,3.0,2.7};
 
 // char map[MAPLEN][MAPLEN];
+double CalculateAngleSpeed(Robot* _Robot, vector<Workbench*>& _WorkBenchVec, int MinID);
 bool Buy456(Robot* _Robot, vector<Workbench*>& _WorkBench456);
 bool Buy7(Robot* _Robot, vector<Workbench*>& _WorkBench7);
 void ShowRobotInfo(vector<Robot*>& _RobotVec);
@@ -146,17 +147,34 @@ int FindMinDistanceTargetWB(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
 double CalculateDistance(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
     int i;
     int MinID;
-    vector<double> _axis = _Robot->GetAxis();
-    if(_Robot->RobotID == 2){
-        cerr << "havetarget" << _Robot->HaveTarget << endl;
-    }
     if(_Robot->HaveTarget == -1){
         MinID = FindMinDistanceTargetWB(_Robot, _WorkBenchVec);
         _Robot->HaveTarget = MinID;
     }
     else    
         MinID = _Robot->HaveTarget;
+
+
+    // double Angle = atan2(YDistance, XDistance);
+    // double AngleDifference = abs(Angle - _Robot->GetTowards());
+    // if(abs(AngleDifference) < 0.5)
+    //     flag = Angle - _Robot->GetTowards() > 0.0 ? 1 : -1; // 1:ni -1 sun;
+    // else    
+    //     flag = 1;
+    // double RealDis =  sqrt(XDistance * XDistance + YDistance * YDistance);
+    _Robot->GetWantToCloseWBID() = _WorkBenchVec[MinID]->GetWorkBenchID();
+    return CalculateAngleSpeed(_Robot, _WorkBenchVec, MinID);
+    // _Robot->GetRobotWorkBenchDis() = RealDis;
+    // _Robot->GetAngleDifference() = AngleDifference;
+    // double AngleSpeed = AngleDifference > RobotSetAngleSpeed[_Robot->RobotID] ? RobotSetAngleSpeed[_Robot->RobotID] : AngleDifference;
+    // return AngleSpeed * flag;
+
+
+}
+
+double CalculateAngleSpeed(Robot* _Robot, vector<Workbench*>& _WorkBenchVec, int MinID){
     int flag = 0;
+    vector<double> _axis = _Robot->GetAxis();
     double XDistance =  _WorkBenchVec[MinID]->GetAxis()[0] - _axis[0];
     double YDistance =  _WorkBenchVec[MinID]->GetAxis()[1] - _axis[1];
     int quadrant = 0;
@@ -171,44 +189,46 @@ double CalculateDistance(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
 
     double Angle = atan2(YDistance, XDistance);
     double AngleDifference = abs(Angle - _Robot->GetTowards());
-    if(abs(AngleDifference) < 0.5)
+    if(abs(AngleDifference) < 0.4)
         flag = Angle - _Robot->GetTowards() > 0.0 ? 1 : -1; // 1:ni -1 sun;
     else    
         flag = 1;
-    double RealDis =  sqrt(XDistance * XDistance + YDistance * YDistance);
-    _Robot->GetWantToCloseWBID() = _WorkBenchVec[MinID]->GetWorkBenchID();
-    _Robot->GetRobotWorkBenchDis() = RealDis;
-    _Robot->GetAngleDifference() = AngleDifference;
-    double AngleSpeed = AngleDifference > RobotSetAngleSpeed[_Robot->RobotID] ? RobotSetAngleSpeed[_Robot->RobotID] : AngleDifference;
+    if(abs(AngleDifference) >= 0.4){
+        AngleDifference = RobotSetAngleSpeed[_Robot->RobotID];
+    }
+    double AngleSpeed = AngleDifference;
     return AngleSpeed * flag;
 }
-double Move(Robot* _Robot, int _WorkBenchID, vector<Workbench*>& _WorkBenchVec){
-    vector<double> _axis = _Robot->GetAxis();
-    int flag = 0;
-    double XDistance =  _WorkBenchVec[_WorkBenchID]->GetAxis()[0] - _axis[0];
-    double YDistance =  _WorkBenchVec[_WorkBenchID]->GetAxis()[1] - _axis[1];
-    int quadrant = 0;
-    if(YDistance > 0.0 && XDistance > 0.0)
-        quadrant = 1;
-    else if(YDistance < 0.0 && XDistance > 0.0)
-        quadrant = 4;
-    else if(YDistance > 0.0 && XDistance < 0.0)
-        quadrant = 2;
-    else
-        quadrant = 3;
 
-    double Angle = atan2(YDistance, XDistance);
-    double AngleDifference = abs(Angle - _Robot->GetTowards());
-    if(abs(AngleDifference) < 0.5)
-        flag = Angle - _Robot->GetTowards() > 0.0 ? 1 : -1; // 1:ni -1 sun;
-    else    
-        flag = 1;
-    double RealDis =  sqrt(XDistance * XDistance + YDistance * YDistance);
-    _Robot->GetWantToCloseWBID() = _WorkBenchVec[_WorkBenchID]->GetWorkBenchID();
-    _Robot->GetRobotWorkBenchDis() = RealDis;
-    _Robot->GetAngleDifference() = AngleDifference;
-    double AngleSpeed = AngleDifference > RobotSetAngleSpeed[_Robot->RobotID] ? RobotSetAngleSpeed[_Robot->RobotID] : AngleDifference;
-    return AngleSpeed * flag;
+
+double Move(Robot* _Robot, int _WorkBenchID, vector<Workbench*>& _WorkBenchVec){
+    // vector<double> _axis = _Robot->GetAxis();
+    // int flag = 0;
+    // double XDistance =  _WorkBenchVec[_WorkBenchID]->GetAxis()[0] - _axis[0];
+    // double YDistance =  _WorkBenchVec[_WorkBenchID]->GetAxis()[1] - _axis[1];
+    // int quadrant = 0;
+    // if(YDistance > 0.0 && XDistance > 0.0)
+    //     quadrant = 1;
+    // else if(YDistance < 0.0 && XDistance > 0.0)
+    //     quadrant = 4;
+    // else if(YDistance > 0.0 && XDistance < 0.0)
+    //     quadrant = 2;
+    // else
+    //     quadrant = 3;
+
+    // double Angle = atan2(YDistance, XDistance);
+    // double AngleDifference = abs(Angle - _Robot->GetTowards());
+    // if(abs(AngleDifference) < 0.5)
+    //     flag = Angle - _Robot->GetTowards() > 0.0 ? 1 : -1; // 1:ni -1 sun;
+    // else    
+    //     flag = 1;
+    // double RealDis =  sqrt(XDistance * XDistance + YDistance * YDistance);
+    // _Robot->GetWantToCloseWBID() = _WorkBenchVec[_WorkBenchID]->GetWorkBenchID();
+    // _Robot->GetRobotWorkBenchDis() = RealDis;
+    // _Robot->GetAngleDifference() = AngleDifference;
+    // double AngleSpeed = AngleDifference > RobotSetAngleSpeed[_Robot->RobotID] ? RobotSetAngleSpeed[_Robot->RobotID] : AngleDifference;
+    // return AngleSpeed * flag;
+    return CalculateAngleSpeed(_Robot, _WorkBenchVec, _WorkBenchID);
 }
 
 int main() {
@@ -352,10 +372,10 @@ int main() {
             }
         }
 
-        ShowRobotInfo(RobotVec);
+        // ShowRobotInfo(RobotVec);
         // Showyuyue(WorkBenchVec[16]);
         // Showyuyue(WorkBenchVec[14]);
-        Showyuyue(WorkBenchVec[0]);
+        // Showyuyue(WorkBenchVec[0]);
         for(i = 0; i < 4; i++){
             if(RobotVec[i] -> RobotMode == 3)
                 exit(1);
@@ -562,4 +582,9 @@ void Showyuyue(Workbench* _WorkBench){
     cerr << "WorkBenchyuyue"<< _WorkBench->WorkBenchID << " Kind : " << _WorkBench->ProductKind << endl;
     cerr << _WorkBench->MaterialStatus << endl;
     cerr << endl;
+}
+
+
+void ControlLineSpeed(){
+    
 }
