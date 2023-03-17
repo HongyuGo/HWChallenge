@@ -19,10 +19,11 @@ bool Buy7(Robot* _Robot, vector<Workbench*>& _WorkBench7);
 void ShowRobotInfo(vector<Robot*>& _RobotVec);
 void FlushProduct(Robot* _Robot, vector<Workbench*>& _WorkBenchVec);
 bool All(vector<Workbench*>& _WorkBenchVec, int Type);
-bool All7(vector<Workbench*>& _WorkBenchVec, int Type, int* CheckID);
+bool All7(vector<Workbench*>& _WorkBenchVec, int Type, int* CheckID, int RobotID);
 bool IsBuy(int Kind, vector<vector<Workbench*>>& _WorkBenchSellSelf);
 double RobotCloseWorkBench(Robot* _Robot, vector<Workbench*>& _WorkBenchVec);
 double RobotCloseWall(Robot* _Robot);
+void Showyuyue(Workbench* _WorkBench);
 int start = 0;
 bool MapInit() {
     char line[1024];
@@ -133,13 +134,17 @@ int FindMinDistanceTargetWB(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
     }
     // cerr << "MinID" << MinID << endl;
     // exit(1);
+    _Robot->FindStatus = 0;
     if(MinID == _WorkBenchVec.size() + 1){
         // exit(1);
         _Robot->FindStatus = 1;
         MinID = _WorkBenchVec.size() - 1;
     }
-    if(_WorkBenchVec[MinID] -> RobotScheduled == -1)
-        _WorkBenchVec[MinID] -> RobotScheduled = _Robot->RobotID;
+    if(_WorkBenchVec[MinID]->RobotScheduled.empty() || find(_WorkBenchVec[MinID]->RobotScheduled.begin(), _WorkBenchVec[MinID]->RobotScheduled.end(), _Robot->RobotID) == _WorkBenchVec[MinID]->RobotScheduled.end()){
+        if(_Robot->FindStatus == 0)
+            _WorkBenchVec[MinID] -> RobotScheduled.push_back(_Robot->RobotID);
+    }
+    // if(_WorkBenchVec[MinID] -> RobotScheduled == -1)
     // cerr << "MinID " << MinID << endl;
     // cerr << "TargetWB " << _WorkBenchVec[MinID]->WorkBenchID << endl;
     return MinID;
@@ -148,6 +153,9 @@ double CalculateDistance(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
     int i;
     int MinID;
     vector<double> _axis = _Robot->GetAxis();
+    if(_Robot->RobotID == 2){
+        cerr << "havetarget" << _Robot->HaveTarget << endl;
+    }
     if(_Robot->HaveTarget == -1){
         MinID = FindMinDistanceTargetWB(_Robot, _WorkBenchVec);
         _Robot->HaveTarget = MinID;
@@ -266,27 +274,27 @@ int main() {
             if(WorkBenchVec[i] -> ProductStatus == 1 && WorkBenchVec[i] -> WorkBenchKind == 7){
                 WorkBench7.push_back(WorkBenchVec[i]);
             }
-            if(WorkBenchVec[i] -> ProductStatus == 1 && WorkBenchVec[i] -> WorkBenchKind == 6 && WorkBenchVec[i] -> RobotScheduled == -1 && !All7(WorkBenchSelf[7], 6, &CheckID)){
-                if(CheckID == i){
-                count6++;
-                WorkBench6.push_back(WorkBenchVec[i]);
-                WorkBench456.push_back(WorkBenchVec[i]);
-                }
-            }
-            if(WorkBenchVec[i] -> ProductStatus == 1 && WorkBenchVec[i] -> WorkBenchKind == 5 && WorkBenchVec[i] -> RobotScheduled == -1 && !All7(WorkBenchSelf[7], 5, &CheckID)){
-                if(CheckID == i){
-                count5++;
-                WorkBench5.push_back(WorkBenchVec[i]);
-                WorkBench456.push_back(WorkBenchVec[i]);
-                }
-            }
-            if(WorkBenchVec[i] -> ProductStatus == 1 && WorkBenchVec[i] -> WorkBenchKind == 4 && WorkBenchVec[i] -> RobotScheduled == -1 && !All7(WorkBenchSelf[7], 4, &CheckID)){
-                if(CheckID == i){
-                count4++;
-                WorkBench4.push_back(WorkBenchVec[i]);
-                WorkBench456.push_back(WorkBenchVec[i]);
-                }
-            }
+            // if(WorkBenchVec[i] -> ProductStatus == 1 && WorkBenchVec[i] -> WorkBenchKind == 6 && WorkBenchVec[i] -> RobotScheduled == -1 && !All7(WorkBenchSelf[7], 6, &CheckID)){
+            //     if(CheckID == i){
+            //     count6++;
+            //     WorkBench6.push_back(WorkBenchVec[i]);
+            //     WorkBench456.push_back(WorkBenchVec[i]);
+            //     }
+            // }
+            // if(WorkBenchVec[i] -> ProductStatus == 1 && WorkBenchVec[i] -> WorkBenchKind == 5 && WorkBenchVec[i] -> RobotScheduled == -1 && !All7(WorkBenchSelf[7], 5, &CheckID)){
+            //     if(CheckID == i){
+            //     count5++;
+            //     WorkBench5.push_back(WorkBenchVec[i]);
+            //     WorkBench456.push_back(WorkBenchVec[i]);
+            //     }
+            // }
+            // if(WorkBenchVec[i] -> ProductStatus == 1 && WorkBenchVec[i] -> WorkBenchKind == 4 && WorkBenchVec[i] -> RobotScheduled == -1 && !All7(WorkBenchSelf[7], 4, &CheckID)){
+            //     if(CheckID == i){
+            //     count4++;
+            //     WorkBench4.push_back(WorkBenchVec[i]);
+            //     WorkBench456.push_back(WorkBenchVec[i]);
+            //     }
+            // }
         }
         WorkBenchSellSelf[4] = WorkBench4;
         WorkBenchSellSelf[5] =WorkBench5;
@@ -311,11 +319,12 @@ int main() {
         for(i = 0; i < 4; i++){
             Buy7(RobotVec[i],WorkBench7);
             if(RobotVec[i] -> RobotMode == 3){
+                // exit(1);
                 Cur[i] = 0;
                 AngleSpeed[i] = Move(RobotVec[i], RobotVec[i]->WantToCloseWBID, WorkBenchVec);              
                 continue;
             }
-            Buy456(RobotVec[i], WorkBench456);
+            // Buy456(RobotVec[i], WorkBench456);
             FlushProduct(RobotVec[i], WorkBenchVec);
             if(RobotVec[i] -> TypeArticleCarry == 4 || RobotVec[i] -> TypeArticleCarry == 5 || RobotVec[i] -> TypeArticleCarry == 6)
                 RobotVec[i] -> RobotMode = 2;
@@ -341,6 +350,7 @@ int main() {
                     // cerr << "7 : " << WorkBenchSelf[7].size() << endl;
                     // cerr << "have target" << RobotVec[i]->HaveTarget << endl;
                     AngleSpeed[i] = CalculateDistance(RobotVec[i], WorkBenchSelf[7]);
+                    
                 }
                 else if(WorkBenchSelf[9].size() != 0){
                     Cur[i] = 0;
@@ -366,6 +376,10 @@ int main() {
         }
 
         ShowRobotInfo(RobotVec);
+        Showyuyue(WorkBenchVec[16]);
+        Showyuyue(WorkBenchVec[14]);
+        if(RobotVec[1]->RobotMode == 3)
+            exit(1);
         // cerr << "WorkBench22 " << WorkBenchVec[22] -> MaterialStatus << endl;
         // cerr << "WorkBench6" << WorkBenchSelf[6][1]->MaterialStatus << endl;
         printf("%d\n", frameID);
@@ -394,13 +408,10 @@ int main() {
                 // RobotVec[robotId] -> HaveTarget = -1;
                 BuySellFlag = 1;
             }
-            if(robotId == 2){
-                // cerr << RobotVec[robotId]->GetWantToCloseWBID() << " " << RobotVec[robotId]->GetWorkBenchID() << endl;
-            }
             if(RobotVec[robotId]->GetWorkBenchID() == RobotVec[robotId]->GetWantToCloseWBID() && RobotVec[robotId]->TypeArticleCarry == 0){
                 if(WorkBenchVec[RobotVec[robotId]->GetWorkBenchID()]->ProductStatus == 1 ){
                     int tmp;
-                    if(!All7(WorkBenchSelf[7], WorkBenchVec[RobotVec[robotId]->GetWorkBenchID()]->WorkBenchKind, &tmp)){
+                    if(!All7(WorkBenchSelf[7], WorkBenchVec[RobotVec[robotId]->GetWorkBenchID()]->WorkBenchKind, &tmp, robotId)){
                         if(9000 - frameID < 350 && WorkBenchVec[RobotVec[robotId]->GetWorkBenchID()]->WorkBenchKind == 7||
                            9000 - frameID < 250 && WorkBenchVec[RobotVec[robotId]->GetWorkBenchID()]->WorkBenchKind == 6||
                            9000 - frameID < 250 && WorkBenchVec[RobotVec[robotId]->GetWorkBenchID()]->WorkBenchKind == 5||
@@ -411,6 +422,7 @@ int main() {
                             fflush(stdout);
                             BuySellFlag = 1;
                             int ID = RobotVec[robotId]->WorkBenchID;
+                            // WorkBenchVec[RobotVec[robotId]->GetWorkBenchID()]->RobotScheduled.clear();
                         }
                     }
                     // if(find_if(WorkBench456.begin(), WorkBench456.end(),[ID](Workbench* work){return work->WorkBenchID == ID;}) != WorkBench456.end()){
@@ -428,7 +440,10 @@ int main() {
                     RobotVec[robotId]->WantTOCloseWBKind = Order[robotId][Cur[robotId]];
                 }
                 RobotVec[robotId] -> RobotMode = 0;
-                WorkBenchVec[RobotVec[robotId]->WorkBenchID] -> RobotScheduled = -1;
+                vector<int>& Erase = (WorkBenchVec[RobotVec[robotId]->WorkBenchID] -> RobotScheduled);
+                if(find(Erase.begin(), Erase.end(), robotId) != Erase.end())
+                    Erase.erase(find(Erase.begin(), Erase.end(), robotId));
+                // WorkBenchVec[RobotVec[robotId]->WorkBenchID] -> RobotScheduled = -1;
                 RobotVec[robotId] -> HaveTarget = -1;
             }
         }
@@ -452,8 +467,8 @@ bool Buy456(Robot* _Robot, vector<Workbench*>& _WorkBench456){
         return false;
     }
     int MinID456 = FindMinDistanceTargetWB(_Robot, _WorkBench456);
-    if(_WorkBench456[MinID456] -> RobotScheduled != -1)
-        return false;
+    // if(_WorkBench456[MinID456] -> RobotScheduled != -1)
+    //     return false;
     _Robot -> WantToCloseWBID = _WorkBench456[MinID456] -> WorkBenchID;
     _WorkBench456.erase(_WorkBench456.begin() + MinID456);
     _Robot -> RobotMode = 1;
@@ -470,7 +485,7 @@ bool Buy7(Robot* _Robot, vector<Workbench*>& _WorkBench7){
         return false;
     }
     int MinID456 = FindMinDistanceTargetWB(_Robot, _WorkBench7);
-    if(_WorkBench7[MinID456] -> RobotScheduled != -1)
+    if(!_WorkBench7[MinID456] -> RobotScheduled.empty())
         return false;
     _Robot -> WantToCloseWBID = _WorkBench7[MinID456] -> WorkBenchID;
     _WorkBench7.erase(_WorkBench7.begin() + MinID456);
@@ -496,8 +511,9 @@ void ShowRobotInfo(vector<Robot*>& _RobotVec){
     cerr << endl;
     cerr << "Robot Find Status" << endl;
     for(i = 0; i < 4; i++){
+        // _RobotVec[9]->FindStatus = 0;
         cerr << RobotVec[i] -> FindStatus << " ";
-        // RobotVec[i]->FindStatus = 0;
+        RobotVec[i]->FindStatus = 0;
     }
     cerr << endl;
 }
@@ -505,10 +521,11 @@ void ShowRobotInfo(vector<Robot*>& _RobotVec){
 void FlushProduct(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
     if(_Robot->RobotMode == 0)
         return;
-    if(_WorkBenchVec[_Robot -> WantToCloseWBID] -> ProductStatus == 0){
-        _Robot->HaveTarget = -1;
-        _Robot->RobotMode = 0;
-    }
+        
+    // if(_WorkBenchVec[_Robot -> WantToCloseWBID] -> ProductStatus == 0){
+    //     _Robot->HaveTarget = -1;
+    //     _Robot->RobotMode = 0;
+    // }
 }
 
 bool All(vector<Workbench*>& _WorkBenchVec, int Type){
@@ -526,7 +543,7 @@ bool All(vector<Workbench*>& _WorkBenchVec, int Type){
 }
 
 
-bool All7(vector<Workbench*>& _WorkBenchVec, int Type, int *CheckID){
+bool All7(vector<Workbench*>& _WorkBenchVec, int Type, int *CheckID, int RobotID){
     int i;
     if(_WorkBenchVec.empty())
         return false;
@@ -535,14 +552,15 @@ bool All7(vector<Workbench*>& _WorkBenchVec, int Type, int *CheckID){
     if(Type == 1 || Type == 2 || Type == 3)
         return false;
     for(i = 0; i < _WorkBenchVec.size(); i++){
-        if((_WorkBenchVec[i]-> MaterialStatus & (1 << Type)) == 0){
-            if(_WorkBenchVec[i]->RobotScheduled == -1){
-                *CheckID = _WorkBenchVec[i]->WorkBenchID;
+        if((_WorkBenchVec[i]-> MaterialStatus & (1 << Type)) == 0){//检查所有的7号工作台，如果有一个工作台对应456没满，则可以购买456
+            // if(_WorkBenchVec[i]->RobotScheduled == -1){
+            if(_WorkBenchVec[i]->RobotScheduled.empty()){
+                // *CheckID = _WorkBenchVec[i]->WorkBenchID;
                 return false;
-            }else if(RobotVec[_WorkBenchVec[i]->RobotScheduled] -> TypeArticleCarry == Type){
+            }else if(_WorkBenchVec[i]->CheckLock(RobotVec,Type,RobotID)){
                 return true;
             }else{
-                *CheckID = _WorkBenchVec[i]->WorkBenchID;
+                // *CheckID = _WorkBenchVec[i]->WorkBenchID;
                 return false;
             }
         }
@@ -573,4 +591,12 @@ double RobotCloseWall(Robot* _Robot){
     if(_Robot -> Axis[1] < Limit || _Robot -> Axis[1] > 50 - Limit)
         return 4.0;
     return NormalSpeed;
+}
+
+void Showyuyue(Workbench* _WorkBench){
+    cerr << "WorkBench : " << _WorkBench->WorkBenchID << " Kind : " << _WorkBench->ProductKind << endl;
+    for(int tmp: _WorkBench->RobotScheduled){
+        cerr << tmp << ' ';
+    }
+    cerr << endl;
 }
