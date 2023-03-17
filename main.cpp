@@ -10,8 +10,8 @@ vector<vector<Workbench*>> WorkBenchSelf(10);
 vector<Robot*>RobotVec;
 int Money;
 const double NormalSpeed = 6.0;
-vector<double> RobotSetLineSpeed = {NormalSpeed,NormalSpeed,NormalSpeed,NormalSpeed};
-vector<double> RobotSetAngleSpeed = {2.0,2.0,2.0,2.0};
+vector<double> RobotSetLineSpeed = {NormalSpeed-0.4,NormalSpeed-0.2,NormalSpeed,NormalSpeed-0.5};
+vector<double> RobotSetAngleSpeed = {3.0,3.0,3.0,3.0};
 
 // char map[MAPLEN][MAPLEN];
 bool Buy456(Robot* _Robot, vector<Workbench*>& _WorkBench456);
@@ -317,7 +317,7 @@ int main() {
         // cerr << "WorkBench7 : " <<  WorkBench7.size() << endl;
         
         for(i = 0; i < 4; i++){
-            Buy7(RobotVec[i],WorkBench7);
+            // Buy7(RobotVec[i],WorkBench7);
             if(RobotVec[i] -> RobotMode == 3){
                 // exit(1);
                 Cur[i] = 0;
@@ -379,8 +379,10 @@ int main() {
         // Showyuyue(WorkBenchVec[16]);
         // Showyuyue(WorkBenchVec[14]);
         Showyuyue(WorkBenchVec[0]);
-        if(RobotVec[1]->RobotMode == 3)
-            exit(1);
+        for(i = 0; i < 4; i++){
+            if(RobotVec[i] -> RobotMode == 3)
+                exit(1);
+        }
         // cerr << "WorkBench22 " << WorkBenchVec[22] -> MaterialStatus << endl;
         // cerr << "WorkBench6" << WorkBenchSelf[6][1]->MaterialStatus << endl;
         printf("%d\n", frameID);
@@ -550,28 +552,16 @@ bool All7(vector<Workbench*>& _WorkBenchVec, int Type, int *CheckID, int RobotID
         return false;
     // cerr << "WorkBenchvec[0]kind" << _WorkBenchVec[0] -> WorkBenchKind << endl;
     // if(_WorkBenchVec[0] -> WorkBenchKind == 1 || _WorkBenchVec[0] -> WorkBenchKind == 2 || _WorkBenchVec[0] -> WorkBenchKind == 3)    
-    cerr << "Type" << Type << endl;
     if(Type == 1 || Type == 2 || Type == 3 || Type == 7)
         return false;
     for(i = 0; i < _WorkBenchVec.size(); i++){
         if((_WorkBenchVec[i]-> MaterialStatus & (1 << Type)) == 0){//检查所有的7号工作台，如果有一个工作台对应456没满，则可以购买456
-            cerr<< "jinru" << endl;
             if(_WorkBenchVec[i]->RobotScheduled.empty()){
-                cerr << "return empty" << endl;
                 return false;
             }
-            cerr << "RobotCarry" <<endl;
-            cerr << RobotVec[0] ->TypeArticleCarry << ' ' << RobotVec[1] ->TypeArticleCarry << ' ' <<  RobotVec[2] ->TypeArticleCarry << ' ' <<  RobotVec[3] ->TypeArticleCarry << endl;
-            cerr << "empty" << _WorkBenchVec[i]->RobotScheduled.empty() << "RobotID: " << RobotID << endl;
-            if(RobotVec[3] -> TypeArticleCarry == 4 && RobotVec[0] -> TypeArticleCarry == 4)
-                exit(1);
             if(_WorkBenchVec[i]->CheckLock(RobotVec,Type,RobotID)){
-                // exit(1);
                 return true;
             }else{
-                cerr << "return else" << endl;
-                // if(RobotVec[3] -> TypeArticleCarry == 4)
-                    // exit(1);
                 return false;
             }
         }
