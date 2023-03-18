@@ -15,6 +15,8 @@ vector<double> RobotSetAngleSpeed = {3.0,3.0,3.0,3.0};
 int GlobalFrameID = 0;
 int time111 = 0;
 int timeswap = 0;
+int flag = 0;
+
 
 // char map[MAPLEN][MAPLEN];
 double CalculateAngleSpeed(Robot* _Robot, vector<Workbench*>& _WorkBenchVec, int MinID);
@@ -249,7 +251,7 @@ int main() {
     int i;
     const int Ordernum = 4;
     vector<int> Order0 = {1, 4, 2, 4};
-    vector<int> Order1 = {3, 5, 1, 5};
+    vector<int> Order1 = {1, 5, 3, 5};
     vector<int> Order2 = {2, 6, 3, 6};
     vector<int> Order3 = {3, 6, 2, 6};
     vector<int> Cur(4,0);
@@ -324,17 +326,33 @@ int main() {
         //     else
         //         C = 6;
         // }
+        if(frameID % 1000 == 0)
+            flag++;
+        if(flag % 3 == 0 && RobotVec[3]->TypeArticleCarry == 0){
+            Order[3] = Order[2];
+            swap(Order[3][0], Order[3][2]);
+        }
+        if(flag % 3 == 1 && RobotVec[3]->TypeArticleCarry == 0){
+            Order[3] = Order[1];
+            swap(Order[3][0], Order[3][2]);
+        }
+        if(flag % 3 == 2 && RobotVec[3]->TypeArticleCarry == 0){
+            Order[3] = Order[0];
+            swap(Order[3][0], Order[3][2]);
+        }
+        cerr << "flag " << flag << endl;
         // int C = Find456Min.begin()->second;
         // Order[3][1] = C;
         // Order[3][3] = C;
-        // Order[3][0] = Order[C - 4][2];
-        // Order[3][2] = Order[C - 4][0];
+        // Order[3][0] = Order[C - 4][0];
+        // Order[3][2] = Order[C - 4][2];
         // cerr << "C" << C << endl;
         // cerr << "timeswap" << timeswap << endl;
         for(i = 0; i < 4; i++){
+            // if(flag == 3){}
             // Buy456(RobotVec[i], WorkBench456);
             if(RobotVec[i] -> RobotMode == 3){
-                Cur[i] = 0;
+                // Cur[i] = 0;
                 AngleSpeed[i] = Move(RobotVec[i], RobotVec[i]->WantToCloseWBID, WorkBenchVec);              
                 continue;
             }
@@ -353,27 +371,27 @@ int main() {
                 // }
                 AngleSpeed[i] =  CalculateDistance(RobotVec[i], WorkBenchSelf[RobotVec[i]->WantTOCloseWBKind]);
             }else if(RobotVec[i] -> RobotMode == 1){
-                Cur[i] = 0;
+                // Cur[i] = 0;
                 AngleSpeed[i] = Move(RobotVec[i], RobotVec[i]->WantToCloseWBID, WorkBenchVec);
             }
             if(RobotVec[i] -> RobotMode == 2){
                 if(WorkBenchSelf[7].size() !=0){
-                    Cur[i] = 0;
+                    // Cur[i] = 0;
                     AngleSpeed[i] = CalculateDistance(RobotVec[i], WorkBenchSelf[7]);
                     
                 }
                 else if(WorkBenchSelf[9].size() != 0){
-                    Cur[i] = 0;
+                    // Cur[i] = 0;
                     AngleSpeed[i] = CalculateDistance(RobotVec[i], WorkBenchSelf[9]);
                 }
             }
             if(RobotVec[i] -> RobotMode == 4){
                 if(WorkBenchSelf[8].size() != 0){
-                    Cur[i] = 0;
+                    // Cur[i] = 0;
                     AngleSpeed[i] = CalculateDistance(RobotVec[i], WorkBenchSelf[8]);
                 }
                 else if(WorkBenchSelf[9].size() != 0){
-                    Cur[i] = 0;
+                    // Cur[i] = 0;
                     AngleSpeed[i] = CalculateDistance(RobotVec[i], WorkBenchSelf[9]);
                 }
             }
@@ -386,7 +404,7 @@ int main() {
         // cerr << "time" << time111 << endl;
         printf("%d\n", frameID);
         for(i = 0; i < 4; i++){
-            if(abs(AngleSpeed[i]) < 0.2){
+            if(abs(AngleSpeed[i]) < 0.4){
                 LineSpeed[i] = RobotSetLineSpeed[i];
                 LineSpeed[i] = RobotCloseWall(RobotVec[i]);
             }
@@ -568,10 +586,14 @@ bool IsBuy(int Kind, vector<vector<Workbench*>>& _WorkBenchSellSelf){
 }
 
 double RobotCloseWorkBench(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
-    if(abs(_Robot->Axis - WorkBenchVec[_Robot->WantToCloseWBID]->Axis) < 0.4 && _Robot->TypeArticleCarry != 0){
-        return -1.0;
+    const double Limit = 6.0;
+    if(_Robot -> Axis[0] < Limit || _Robot -> Axis[0] > 50 - Limit || _Robot -> Axis[1] < Limit || _Robot -> Axis[1] > 50 - Limit){
+        if(abs(_Robot->Axis - WorkBenchVec[_Robot->WantToCloseWBID]->Axis) < 0.4 && _Robot->TypeArticleCarry != 0){
+            return -1.0;
+        }
+        return 1.0;
     }
-    return 1.0;
+    return NormalSpeed - 2.0;
 }
 
 double RobotCloseWall(Robot* _Robot){
