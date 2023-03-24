@@ -163,12 +163,36 @@ int FindMinDistanceTargetWB(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
     int MinID = _WorkBenchVec.size() + 1;
     vector<double> _axis = _Robot->GetAxis();
     double MinDistance = 1e10;
+    int MaterialCount = count(_WorkBenchVec[0]->LookMaterial.begin(),_WorkBenchVec[0]->LookMaterial.end(),1);
     for(i = 0; i < _WorkBenchVec.size(); i++){
         double DistanceTmp = _axis - _WorkBenchVec[i]->GetAxis();
-        if(DistanceTmp < MinDistance && !(_WorkBenchVec[i]->HaveLock(_Robot->TypeArticleCarry, RobotVec, _Robot -> RobotID))){
-            MinDistance = DistanceTmp;
-            MinID= i;
+        if(!(_WorkBenchVec[i]->HaveLock(_Robot->TypeArticleCarry, RobotVec, _Robot -> RobotID))){
+
+            if(_WorkBenchVec[0]->WorkBenchKind == 1 || _WorkBenchVec[0]->WorkBenchKind == 2 || _WorkBenchVec[0]->WorkBenchKind == 3){
+                if(DistanceTmp < MinDistance){
+                        MinDistance = DistanceTmp;
+                        MinID= i;
+                }
+            }else{
+                if(_WorkBenchVec[i]->ProductStatus == 1){
+                    MinID = i;
+                    break;
+                }
+                if(count(_WorkBenchVec[i]->LookMaterial.begin(),_WorkBenchVec[i]->LookMaterial.end(), 1) > MaterialCount){
+                    MinID = i;
+                    MaterialCount = count(_WorkBenchVec[i]->LookMaterial.begin(),_WorkBenchVec[i]->LookMaterial.end(), 1);
+                }else if(count(_WorkBenchVec[i]->LookMaterial.begin(),_WorkBenchVec[i]->LookMaterial.end(), 1) == MaterialCount){
+                    if(DistanceTmp < MinDistance){
+                        MinDistance = DistanceTmp;
+                        MinID= i;
+                    }
+                }
+            }
         }
+        // if(DistanceTmp < MinDistance && !(_WorkBenchVec[i]->HaveLock(_Robot->TypeArticleCarry, RobotVec, _Robot -> RobotID))){
+        //     MinDistance = DistanceTmp;
+        //     MinID= i;
+        // }
     }
     _Robot->FindStatus = 0;
     if(MinID == _WorkBenchVec.size() + 1){
@@ -181,6 +205,31 @@ int FindMinDistanceTargetWB(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
     }
     return MinID;
 }
+
+
+// int FindMinDistanceTargetWB(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
+//     int i;
+//     int MinID = _WorkBenchVec.size() + 1;
+//     vector<double> _axis = _Robot->GetAxis();
+//     double MinDistance = 1e10;
+//     for(i = 0; i < _WorkBenchVec.size(); i++){
+//         double DistanceTmp = _axis - _WorkBenchVec[i]->GetAxis();
+//         if(DistanceTmp < MinDistance && !(_WorkBenchVec[i]->HaveLock(_Robot->TypeArticleCarry, RobotVec, _Robot -> RobotID))){
+//             MinDistance = DistanceTmp;
+//             MinID= i;
+//         }
+//     }
+//     _Robot->FindStatus = 0;
+//     if(MinID == _WorkBenchVec.size() + 1){
+//         _Robot->FindStatus = 1;
+//         MinID = _WorkBenchVec.size() - 1;
+//     }
+//     if(_WorkBenchVec[MinID]->RobotScheduled.empty() || find(_WorkBenchVec[MinID]->RobotScheduled.begin(), _WorkBenchVec[MinID]->RobotScheduled.end(), _Robot->RobotID) == _WorkBenchVec[MinID]->RobotScheduled.end()){
+//         if(_Robot->FindStatus == 0)
+//             _WorkBenchVec[MinID] -> RobotScheduled.push_back(_Robot->RobotID);
+//     }
+//     return MinID;
+// }
 double CalculateDistance(Robot* _Robot, vector<Workbench*>& _WorkBenchVec){
     int i;
     int MinID;
