@@ -16,6 +16,8 @@ int GlobalFrameID = 0;
 int time111 = 0;
 int timeswap = 0;
 int flag = 0;
+int mapID = 0;
+int DoOnce = 0;
 
 
 // char map[MAPLEN][MAPLEN];
@@ -48,6 +50,13 @@ bool MapInit() {
             cerr << "Robot" << endl;
             for(i = 0; i < RobotNum; i++){
                 RobotVec[i]->ShowRobot();
+            }
+            if(WorkBenchVec[IDCount - 1]->WorkBenchKind == 4){
+                mapID = 4;
+            }
+            if(WorkBenchVec[12]->WorkBenchKind == 4){
+                mapID = 2;
+                RobotSetLineSpeed[0] = NormalSpeed - 3;
             }
             return true;
         }
@@ -375,20 +384,63 @@ int main() {
         //     else
         //         C = 6;
         // }
-        if(frameID % 1000 == 0)
-            flag++;
-        if(flag % 3 == 0 && RobotVec[3]->TypeArticleCarry == 0){
-            Order[3] = Order[2];
-            swap(Order[3][0], Order[3][2]);
+        if(mapID == 4){
+            if(frameID % 1000 == 0){
+                DoOnce = 0;
+                flag++;
+            }
+            if((flag % 4 == 0|| flag%4 == 1) && RobotVec[3]->TypeArticleCarry == 0 && DoOnce == 0){
+                Order[3] = Order[0];
+                swap(Order[3][0], Order[3][2]);
+                DoOnce = 1;
+            }
+            if(flag % 4 == 2 && RobotVec[3]->TypeArticleCarry == 0 && DoOnce == 0){
+                Order[3] = Order[1];
+                swap(Order[3][0], Order[3][2]);
+                DoOnce = 1;
+            }
+            if(flag % 4 == 3 && RobotVec[3]->TypeArticleCarry == 0 && DoOnce == 0){
+                Order[3] = Order[2];
+                swap(Order[3][0], Order[3][2]);
+                DoOnce = 1;
+            }
+        }else if(mapID == 2){
+            if(frameID % 1000 == 0){
+                DoOnce = 0;
+                flag++;
+            }
+            if(flag % 2 == 0 && RobotVec[3]->TypeArticleCarry == 0 && DoOnce == 0){
+                Order[3] = Order[2];
+                swap(Order[3][0], Order[3][2]);
+                DoOnce = 1;
+            }
+            if(flag % 2 == 1 && RobotVec[3]->TypeArticleCarry == 0 && DoOnce == 0){
+                Order[3] = Order[1];
+                swap(Order[3][0], Order[3][2]);
+                DoOnce = 1;
+            }
+        }else{
+            if(frameID % 1000 == 0){
+                DoOnce = 0;
+                flag++;
+            }
+            if(flag % 3 == 0 && RobotVec[3]->TypeArticleCarry == 0 && DoOnce == 0){
+                Order[3] = Order[2];
+                swap(Order[3][0], Order[3][2]);
+                DoOnce = 1;
+            }
+            if(flag % 3 == 1 && RobotVec[3]->TypeArticleCarry == 0 && DoOnce == 0){
+                Order[3] = Order[1];
+                swap(Order[3][0], Order[3][2]);
+                DoOnce = 1;
+            }
+            if(flag % 3 == 2 && RobotVec[3]->TypeArticleCarry == 0 && DoOnce == 0){
+                Order[3] = Order[0];
+                swap(Order[3][0], Order[3][2]);
+                DoOnce = 1;
+            }
         }
-        if(flag % 3 == 1 && RobotVec[3]->TypeArticleCarry == 0){
-            Order[3] = Order[1];
-            swap(Order[3][0], Order[3][2]);
-        }
-        if(flag % 3 == 2 && RobotVec[3]->TypeArticleCarry == 0){
-            Order[3] = Order[0];
-            swap(Order[3][0], Order[3][2]);
-        }
+        cerr << "mapId " << mapID << endl;
         cerr << "flag " << flag << endl;
         // int C = Find456Min.begin()->second;
         // Order[3][1] = C;
@@ -456,6 +508,9 @@ int main() {
             if(abs(AngleSpeed[i]) < 0.4){
                 LineSpeed[i] = RobotSetLineSpeed[i];
                 LineSpeed[i] = RobotCloseWall(RobotVec[i]);
+                if(mapID == 2){
+                    LineSpeed[0] = 3;
+                }
             }
             else{
                 LineSpeed[i] = RobotCloseWorkBench(RobotVec[i], WorkBenchVec);
